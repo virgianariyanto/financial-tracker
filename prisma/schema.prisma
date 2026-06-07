@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum BudgetPeriod {
+  MONTHLY
+  WEEKLY
+}
+
+model Category {
+  id        String          @id @default(uuid())
+  name      String          @unique
+  icon      String          // Lucide icon name string
+  color     String          // hex color or tailwind class name
+  type      TransactionType
+  isDefault Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  amount      Float
+  currency    String          @default("IDR")
+  type        TransactionType
+  description String?
+  date        DateTime        @default(now())
+  tags        String[]        @default([])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  categoryId  String
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model SavingsGoal {
+  id            String                @id @default(uuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float                 @default(0)
+  currency      String                @default("IDR")
+  deadline      DateTime?
+  icon          String
+  color         String
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  contributions SavingsContribution[]
+}
+
+model SavingsContribution {
+  id        String      @id @default(uuid())
+  amount    Float
+  date      DateTime    @default(now())
+  note      String?
+  createdAt DateTime    @default(now())
+
+  goalId    String
+  goal      SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id         String       @id @default(uuid())
+  amount     Float
+  currency   String       @default("IDR")
+  period     BudgetPeriod @default(MONTHLY)
+  month      Int          // 1-12
+  year       Int
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  categoryId String
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, month, year, period])
+}
