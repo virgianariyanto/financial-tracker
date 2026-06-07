@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  
+  --card-bg: rgba(30, 41, 59, 0.4);
+  --card-border: rgba(255, 255, 255, 0.08);
+  
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.15);
+  
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+
+  --sidebar-width: 260px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), Inter, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  
+  /* Custom animation keyframes */
+  --animate-fade-in: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 15px 0 var(--primary-glow);
+}
+
+.glass-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--card-border);
+  color: var(--foreground);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
