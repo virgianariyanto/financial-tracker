@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, startTransition } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Trash2, 
-  Edit3, 
-  ArrowUpRight, 
+import {
+  Plus,
+  Search,
+  Trash2,
+  Edit3,
+  ArrowUpRight,
   ArrowDownLeft,
   Calendar,
   Filter,
@@ -160,7 +160,7 @@ export default function TransactionsClient() {
             setEditingTransaction(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Transaction
@@ -172,7 +172,7 @@ export default function TransactionsClient() {
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           {/* Search Form */}
           <form onSubmit={handleSearchSubmit} className="flex-1 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search description..."
@@ -181,7 +181,7 @@ export default function TransactionsClient() {
               className="w-full pl-10 pr-4 py-2.5 glass-input text-sm"
             />
           </form>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             {/* Type Filter */}
             <select
@@ -276,11 +276,10 @@ export default function TransactionsClient() {
                       {/* Description & Type Icon */}
                       <td className="px-6 py-4.5">
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${
-                            isExpense 
-                              ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          }`}>
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${isExpense
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            }`}>
                             {isExpense ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
                           </div>
                           <div>
@@ -289,10 +288,10 @@ export default function TransactionsClient() {
                           </div>
                         </div>
                       </td>
-                      
+
                       {/* Category */}
                       <td className="px-6 py-4.5">
-                        <span 
+                        <span
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
                           style={{
                             backgroundColor: `${tx.category.color}15`,

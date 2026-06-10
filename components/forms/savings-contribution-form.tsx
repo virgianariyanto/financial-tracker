@@ -24,7 +24,7 @@ export default function SavingsContributionForm({ goalCurrency, onSubmit, onCanc
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
@@ -32,6 +32,8 @@ export default function SavingsContributionForm({ goalCurrency, onSubmit, onCanc
       note: '',
     },
   });
+
+  const [displayAmount, setDisplayAmount] = useState('');
 
   const handleFormSubmit = async (values: FormValues) => {
     setSubmitting(true);
@@ -57,11 +59,20 @@ export default function SavingsContributionForm({ goalCurrency, onSubmit, onCanc
       <div className="space-y-1">
         <label className="text-xs font-semibold text-slate-400 font-medium">Contribution Amount ({goalCurrency})</label>
         <input
-          type="number"
-          step="any"
+          type="hidden"
           {...register('amount', { valueAsNumber: true })}
+        />
+        <input
+          type="text"
           className="w-full glass-input"
-          placeholder="0.00"
+          placeholder="0"
+          value={displayAmount}
+          onChange={(e) => {
+            const clean = e.target.value.replace(/[^0-9]/g, '');
+            const numVal = Number(clean) || 0;
+            setValue('amount', numVal, { shouldValidate: true });
+            setDisplayAmount(clean ? Number(clean).toLocaleString('id-ID') : '');
+          }}
         />
         {errors.amount && <span className="text-[10px] text-red-400">{errors.amount.message}</span>}
       </div>

@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  ArrowLeftRight, 
-  PiggyBank, 
-  TrendingUp, 
-  Settings, 
+import {
+  LayoutDashboard,
+  ArrowLeftRight,
+  PiggyBank,
+  TrendingUp,
+  Settings,
   FolderTree,
   DollarSign
 } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Backdrop for mobile */}
-      <div 
+      <div
         onClick={onClose}
         className={clsx(
           "fixed inset-0 z-30 bg-black/60 transition-opacity duration-300 lg:hidden",
@@ -41,15 +41,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       />
 
-      <aside 
+      <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-white/8 bg-slate-950 transition-transform duration-300 lg:translate-x-0 lg:bg-slate-950/40 lg:backdrop-blur-xl",
+          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-white/8 bg-[#26282A] transition-transform duration-300 lg:translate-x-0 lg:bg-[#26282A] lg:backdrop-blur-xl",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-16 items-center px-6 border-b border-white/8 gap-2 justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#CCFF00] text-[#556D00]">
               <DollarSign className="h-6 w-6 animate-pulse" />
             </div>
             <div>
@@ -58,14 +58,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
           </div>
           {/* Close button for mobile */}
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 lg:hidden"
           >
             ✕
           </button>
         </div>
-        
+
         <nav className="flex-1 space-y-1.5 px-4 py-6">
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
@@ -78,21 +78,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className={clsx(
                   'group flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50',
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-md shadow-emerald-500/5'
+                    ? 'bg-[#CCFF00] text-[#556D00] border border-emerald-500/20 shadow-md shadow-emerald-500/5'
                     : 'text-slate-400 border border-transparent hover:bg-white/5 hover:text-slate-200'
                 )}
               >
                 <Icon className={clsx(
                   'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
-                  isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-200'
+                  isActive ? 'text-[#556D00]' : 'text-slate-400 group-hover:text-slate-200'
                 )} />
                 {item.name}
               </Link>
             );
           })}
         </nav>
-        
-        <div className="p-4 border-t border-white/8 bg-slate-950/20">
+
+        <div className="p-4 border-t border-white/8 bg-[#26282A]">
           <div className="flex items-center gap-3 px-2 py-1.5">
             <div className="h-9 w-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-sm">
               FH

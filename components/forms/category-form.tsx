@@ -80,22 +80,20 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
         <button
           type="button"
           onClick={() => setValue('type', 'EXPENSE')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-            selectedType === 'EXPENSE'
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${selectedType === 'EXPENSE'
               ? 'bg-red-500/10 text-red-400 border border-red-500/20'
               : 'text-slate-400 hover:text-slate-200'
-          }`}
+            }`}
         >
           Expense
         </button>
         <button
           type="button"
           onClick={() => setValue('type', 'INCOME')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-            selectedType === 'INCOME'
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${selectedType === 'INCOME'
               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
               : 'text-slate-400 hover:text-slate-200'
-          }`}
+            }`}
         >
           Income
         </button>
@@ -122,11 +120,10 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
               key={icon}
               type="button"
               onClick={() => setValue('icon', icon)}
-              className={`p-2 rounded-lg text-[10px] font-medium transition-all border ${
-                selectedIcon === icon
+              className={`p-2 rounded-lg text-[10px] font-medium transition-all border ${selectedIcon === icon
                   ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                   : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
-              }`}
+                }`}
               title={icon}
             >
               {icon.slice(0, 3)}
@@ -149,19 +146,18 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
               key={color}
               type="button"
               onClick={() => setValue('color', color)}
-              className={`h-7 w-7 rounded-lg transition-all border-2 ${
-                selectedColor === color
+              className={`h-7 w-7 rounded-lg transition-all border-2 ${selectedColor === color
                   ? 'border-white scale-110 shadow-lg'
                   : 'border-transparent hover:scale-105'
-              }`}
+                }`}
               style={{ backgroundColor: color }}
             />
           ))}
         </div>
         <input type="hidden" {...register('color')} />
         <div className="flex items-center gap-2">
-          <span 
-            className="h-4 w-4 rounded-md" 
+          <span
+            className="h-4 w-4 rounded-md"
             style={{ backgroundColor: selectedColor }}
           />
           <span className="text-[10px] text-slate-400 font-mono">{selectedColor}</span>
@@ -171,9 +167,9 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
 
       {/* Preview */}
       <div className="glass-panel rounded-xl p-4 flex items-center gap-3">
-        <div 
+        <div
           className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold border"
-          style={{ 
+          style={{
             backgroundColor: `${selectedColor}15`,
             color: selectedColor,
             borderColor: `${selectedColor}30`
@@ -203,7 +199,7 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#556D00] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Save Changes' : 'Create Category'}

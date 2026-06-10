@@ -36,7 +36,7 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: initialValues?.categoryId || '',
@@ -46,6 +46,17 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
       year: initialValues?.year || defaultYear,
     },
   });
+
+  const [displayAmount, setDisplayAmount] = useState(() => {
+    const amt = Number(initialValues?.amount);
+    return amt ? amt.toLocaleString('id-ID') : '';
+  });
+
+  useEffect(() => {
+    if (initialValues?.amount) {
+      setDisplayAmount(Number(initialValues.amount).toLocaleString('id-ID'));
+    }
+  }, [initialValues]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -92,8 +103,8 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
             <span className="text-xs">Loading categories...</span>
           </div>
         ) : (
-          <select 
-            {...register('categoryId')} 
+          <select
+            {...register('categoryId')}
             className="w-full glass-input"
             disabled={!!initialValues} // Cannot change category when editing an existing budget
           >
@@ -113,11 +124,20 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
         <div className="col-span-2 space-y-1">
           <label className="text-xs font-semibold text-slate-400">Monthly Limit</label>
           <input
-            type="number"
-            step="any"
+            type="hidden"
             {...register('amount', { valueAsNumber: true })}
+          />
+          <input
+            type="text"
             className="w-full glass-input"
-            placeholder="e.g. 1500000"
+            placeholder="0"
+            value={displayAmount}
+            onChange={(e) => {
+              const clean = e.target.value.replace(/[^0-9]/g, '');
+              const numVal = Number(clean) || 0;
+              setValue('amount', numVal, { shouldValidate: true });
+              setDisplayAmount(clean ? Number(clean).toLocaleString('id-ID') : '');
+            }}
           />
           {errors.amount && <span className="text-[10px] text-red-400">{errors.amount.message}</span>}
         </div>
@@ -147,7 +167,7 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] text-[#556D00] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Update Budget' : 'Set Budget'}

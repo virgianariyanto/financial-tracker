@@ -49,7 +49,18 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
     }
   });
 
+  const [displayAmount, setDisplayAmount] = useState(() => {
+    const amt = Number(initialValues?.amount);
+    return amt ? amt.toLocaleString('id-ID') : '';
+  });
+
   const transactionType = watch('type');
+
+  useEffect(() => {
+    if (initialValues?.amount) {
+      setDisplayAmount(Number(initialValues.amount).toLocaleString('id-ID'));
+    }
+  }, [initialValues]);
 
   useEffect(() => {
     if (!initialValues?.currency) {
@@ -83,15 +94,15 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
   const handleFormSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
-      const tags = values.tagsString 
+      const tags = values.tagsString
         ? values.tagsString.split(',').map(t => t.trim()).filter(Boolean)
         : [];
-      
+
       const payload = {
         ...values,
         tags,
       };
-      
+
       await onSubmit(payload);
     } catch (err) {
       console.error(err);
@@ -107,22 +118,20 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
         <button
           type="button"
           onClick={() => setValue('type', 'EXPENSE')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-            transactionType === 'EXPENSE'
-              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${transactionType === 'EXPENSE'
+            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+            : 'text-slate-400 hover:text-slate-200'
+            }`}
         >
           Expense
         </button>
         <button
           type="button"
           onClick={() => setValue('type', 'INCOME')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-            transactionType === 'INCOME'
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${transactionType === 'INCOME'
+            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            : 'text-slate-400 hover:text-slate-200'
+            }`}
         >
           Income
         </button>
@@ -133,11 +142,20 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
         <div className="col-span-2 space-y-1">
           <label className="text-xs font-semibold text-slate-400">Amount</label>
           <input
-            type="number"
-            step="any"
+            type="hidden"
             {...register('amount', { valueAsNumber: true })}
+          />
+          <input
+            type="text"
             className="w-full glass-input"
-            placeholder="0.00"
+            placeholder="0"
+            value={displayAmount}
+            onChange={(e) => {
+              const clean = e.target.value.replace(/[^0-9]/g, '');
+              const numVal = Number(clean) || 0;
+              setValue('amount', numVal, { shouldValidate: true });
+              setDisplayAmount(clean ? Number(clean).toLocaleString('id-ID') : '');
+            }}
           />
           {errors.amount && <span className="text-[10px] text-red-400">{errors.amount.message}</span>}
         </div>
@@ -145,7 +163,7 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
           <label className="text-xs font-semibold text-slate-400">Currency</label>
           <select {...register('currency')} className="w-full glass-input">
             {currencies.map(c => (
-              <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">{c.code}</option>
+              <option key={c.code} value={c.code} className="bg-[#111318] text-slate-200">{c.code}</option>
             ))}
           </select>
         </div>
@@ -217,7 +235,7 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-emerald-500 hover:bg-emerald-600 text-[#556D00] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Save Changes' : 'Add Transaction'}

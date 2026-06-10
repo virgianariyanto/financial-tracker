@@ -197,7 +197,7 @@ export default function CategoriesClient() {
             setEditingCategory(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Category
@@ -222,31 +222,28 @@ export default function CategoriesClient() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setTypeFilter('')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-            typeFilter === ''
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'text-slate-400 border-white/5 hover:bg-white/5'
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${typeFilter === ''
+            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            : 'text-slate-400 border-white/5 hover:bg-white/5'
+            }`}
         >
           All
         </button>
         <button
           onClick={() => setTypeFilter('EXPENSE')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-            typeFilter === 'EXPENSE'
-              ? 'bg-red-500/10 text-red-400 border-red-500/20'
-              : 'text-slate-400 border-white/5 hover:bg-white/5'
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${typeFilter === 'EXPENSE'
+            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+            : 'text-slate-400 border-white/5 hover:bg-white/5'
+            }`}
         >
           Expense
         </button>
         <button
           onClick={() => setTypeFilter('INCOME')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-            typeFilter === 'INCOME'
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'text-slate-400 border-white/5 hover:bg-white/5'
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${typeFilter === 'INCOME'
+            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            : 'text-slate-400 border-white/5 hover:bg-white/5'
+            }`}
         >
           Income
         </button>

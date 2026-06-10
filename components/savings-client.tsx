@@ -50,11 +50,11 @@ export default function SavingsClient() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isContributionModalOpen, setIsContributionModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  
+
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<FullSavingsGoal | null>(null);
   const [activeGoalForContribution, setActiveGoalForContribution] = useState<SavingsGoal | null>(null);
-  
+
   const [error, setError] = useState('');
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -206,7 +206,7 @@ export default function SavingsClient() {
             setEditingGoal(null);
             setIsGoalModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer font-medium"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#CCFF00] hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Savings Goal

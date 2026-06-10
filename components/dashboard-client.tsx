@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  DollarSign, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  PiggyBank, 
-  TrendingUp, 
+import {
+  DollarSign,
+  ArrowUpRight,
+  ArrowDownLeft,
+  PiggyBank,
+  TrendingUp,
   Plus,
   RefreshCw,
   Tag
@@ -92,7 +92,7 @@ export default function DashboardClient() {
         <div className="flex gap-3">
           <Link
             href="/transactions"
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Transaction
@@ -123,7 +123,7 @@ export default function DashboardClient() {
           <h3 className="text-2xl font-bold text-slate-200 mt-2">
             {formatCurrency(summary.totalIncome)}
           </h3>
-          <p className="text-[10px] text-emerald-400 font-medium mt-2">All-time earnings registered</p>
+          <p className="text-[10px] text-blue-400 font-medium mt-2">All-time earnings registered</p>
         </div>
 
         {/* Total Expense */}
@@ -165,17 +165,17 @@ export default function DashboardClient() {
                 <AreaChart data={monthlyTrends}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                   <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.08)', borderRadius: '8px' }}
                     labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                   />
@@ -220,7 +220,7 @@ export default function DashboardClient() {
                     <p className="text-base font-extrabold text-slate-200 mt-0.5">{formatCurrency(summary.totalExpense)}</p>
                   </div>
                 </div>
-                
+
                 {/* Labels List */}
                 <div className="w-full space-y-2 mt-4 max-h-[140px] overflow-y-auto pr-1">
                   {categoryBreakdown.map((entry) => (
@@ -260,11 +260,10 @@ export default function DashboardClient() {
                 return (
                   <div key={tx.id} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${
-                        isExpense 
-                          ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      }`}>
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${isExpense
+                        ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        }`}>
                         {isExpense ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                       </div>
                       <div>
@@ -316,9 +315,9 @@ export default function DashboardClient() {
                     </div>
                     {/* Progress slider bar */}
                     <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5">
-                      <div 
+                      <div
                         className="h-full rounded-full transition-all duration-500"
-                        style={{ 
+                        style={{
                           width: `${percent}%`,
                           backgroundColor: goal.color || '#10b981'
                         }}

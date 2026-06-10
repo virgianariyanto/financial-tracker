@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0f19;
+  --background: #111318;
   --foreground: #f8fafc;
-  
-  --card-bg: rgba(30, 41, 59, 0.4);
+
+  --card-bg: rgba(255, 255, 255, 0.08);
   --card-border: rgba(255, 255, 255, 0.08);
-  
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  
+
+  --primary: #CCFF00;
+  --primary-hover: #b8e600;
+  --primary-glow: rgba(204, 255, 0, 0.15);
+
   --accent: #f59e0b;
   --accent-hover: #d97706;
-  
+
   --danger: #ef4444;
   --danger-hover: #dc2626;
 
@@ -25,7 +25,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans), Inter, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  
+
+  --color-emerald-400: var(--primary);
+  --color-emerald-500: var(--primary);
+  --color-emerald-600: var(--primary-hover);
+
   /* Custom animation keyframes */
   --animate-fade-in: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -33,26 +37,45 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+  background-image:
+    radial-gradient(at 0% 0%, rgba(204, 255, 0, 0.05) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
   background-attachment: fixed;
   min-height: 100vh;
@@ -74,18 +97,36 @@ body {
 }
 
 .glass-input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--foreground);
-  border-radius: 8px;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.glass-input:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glass-input:focus {
   outline: none;
+  background: rgba(255, 255, 255, 0.04);
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-glow);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 12px var(--primary-glow);
+}
+
+.glass-input::placeholder {
+  color: rgba(248, 250, 252, 0.4);
+}
+
+.glass-input option {
+  background-color: #0b0f19;
+  color: #f8fafc;
 }
 
 /* Custom Scrollbar */
@@ -105,4 +146,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* Sidebar blur when modal is open */
+aside {
+  transition: transform 0.3s ease, filter 0.3s ease !important;
+}
+
+body.modal-open aside {
+  filter: blur(8px);
+  pointer-events: none;
 }

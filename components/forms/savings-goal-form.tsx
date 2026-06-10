@@ -52,6 +52,11 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
     },
   });
 
+  const [displayAmount, setDisplayAmount] = useState(() => {
+    const amt = Number(initialValues?.targetAmount);
+    return amt ? amt.toLocaleString('id-ID') : '';
+  });
+
   const selectedColor = watch('color');
   const selectedIcon = watch('icon');
 
@@ -95,11 +100,20 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
         <div className="col-span-2 space-y-1">
           <label className="text-xs font-semibold text-slate-400 font-medium">Target Amount</label>
           <input
-            type="number"
-            step="any"
+            type="hidden"
             {...register('targetAmount', { valueAsNumber: true })}
+          />
+          <input
+            type="text"
             className="w-full glass-input"
-            placeholder="0.00"
+            placeholder="0"
+            value={displayAmount}
+            onChange={(e) => {
+              const clean = e.target.value.replace(/[^0-9]/g, '');
+              const numVal = Number(clean) || 0;
+              setValue('targetAmount', numVal, { shouldValidate: true });
+              setDisplayAmount(clean ? Number(clean).toLocaleString('id-ID') : '');
+            }}
           />
           {errors.targetAmount && <span className="text-[10px] text-red-400">{errors.targetAmount.message}</span>}
         </div>
@@ -132,11 +146,10 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
               key={icon}
               type="button"
               onClick={() => setValue('icon', icon)}
-              className={`p-2 rounded-lg text-[10px] font-medium transition-all border ${
-                selectedIcon === icon
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                  : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
-              }`}
+              className={`p-2 rounded-lg text-[10px] font-medium transition-all border ${selectedIcon === icon
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
+                }`}
               title={icon}
             >
               {icon.slice(0, 3)}
@@ -155,11 +168,10 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
               key={color}
               type="button"
               onClick={() => setValue('color', color)}
-              className={`h-7 w-7 rounded-lg transition-all border-2 ${
-                selectedColor === color
-                  ? 'border-white scale-110 shadow-lg'
-                  : 'border-transparent hover:scale-105'
-              }`}
+              className={`h-7 w-7 rounded-lg transition-all border-2 ${selectedColor === color
+                ? 'border-white scale-110 shadow-lg'
+                : 'border-transparent hover:scale-105'
+                }`}
               style={{ backgroundColor: color }}
             />
           ))}
@@ -201,7 +213,7 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-[#CCFF00] hover:bg-emerald-600 text-[#556D00] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Save Changes' : 'Create Goal'}

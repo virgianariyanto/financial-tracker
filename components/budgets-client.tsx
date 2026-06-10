@@ -32,7 +32,7 @@ export default function BudgetsClient() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<CategoryBudget | null>(null);
-  
+
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -159,7 +159,7 @@ export default function BudgetsClient() {
             setEditingBudget(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer font-medium"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#CCFF00] hover:bg-[#b8e600] px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Set Category Budget
@@ -207,7 +207,7 @@ export default function BudgetsClient() {
           <div className="glass-panel p-4 rounded-xl">
             <p className="text-[10px] text-slate-500 uppercase font-semibold">Status</p>
             <p className={`text-base font-bold mt-1 ${totalActual > totalBudgeted ? 'text-red-400' : 'text-emerald-400'}`}>
-              {totalActual > totalBudgeted 
+              {totalActual > totalBudgeted
                 ? `Over limit by ${formatCurrency(totalActual - totalBudgeted, 'IDR')}`
                 : `${formatCurrency(totalBudgeted - totalActual, 'IDR')} remaining`
               }
@@ -238,7 +238,7 @@ export default function BudgetsClient() {
             const hasLimit = b.amount > 0;
             const percentage = hasLimit ? Math.min(100, (b.actual / b.amount) * 100) : 0;
             const isOverBudget = hasLimit && b.actual > b.amount;
-            
+
             // Progress Bar Color mapping
             let progressColor = b.categoryColor;
             if (hasLimit) {
@@ -321,7 +321,7 @@ export default function BudgetsClient() {
                           {percentage.toFixed(0)}%
                         </span>
                       </div>
-                      
+
                       {/* Bar */}
                       <div className="h-1.5 w-full bg-slate-950 border border-white/5 rounded-full overflow-hidden">
                         <div
