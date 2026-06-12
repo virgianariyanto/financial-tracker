@@ -92,7 +92,7 @@ export default function DashboardClient() {
         <div className="flex gap-3">
           <Link
             href="/transactions"
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Transaction
@@ -249,7 +249,7 @@ export default function DashboardClient() {
         <div className="lg:col-span-2 glass-panel rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-base font-semibold text-slate-100">Recent Transactions</h2>
-            <Link href="/transactions" className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">
+            <Link href="/transactions" className="text-xs text-blue-400 hover:text-blue-500 font-semibold">
               View All
             </Link>
           </div>

@@ -43,7 +43,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
         className="relative w-full max-w-lg bg-[#0F121D]/90 border border-white/10 shadow-2xl shadow-black/80 rounded-2xl p-6 overflow-hidden animate-scale-in z-10"
       >
         {/* Top Accent Gradient Border */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#CCFF00] to-transparent opacity-80" />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#10b981] to-transparent opacity-80" />
 
         <div className="flex items-center justify-between pb-4 border-b border-white/5">
           <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>

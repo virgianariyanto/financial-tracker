@@ -220,7 +220,7 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm rounded-xl bg-[#CCFF00] hover:bg-emerald-600 text-[#556D00] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-emerald-500 hover:bg-emerald-600 text-[#064e3b] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Save Changes' : 'Create Goal'}

@@ -112,7 +112,7 @@ export default function SettingsClient() {
           </button>
           <button
             type="submit"
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-xs font-bold text-[#556D00] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-xs font-bold text-[#064e3b] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
           >
             <Save className="h-4 w-4" />
             Save Preferences

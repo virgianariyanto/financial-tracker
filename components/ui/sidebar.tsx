@@ -43,18 +43,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-white/8 bg-[#26282A] transition-transform duration-300 lg:translate-x-0 lg:bg-[#26282A] lg:backdrop-blur-xl",
+          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col bg-[#24272C] transition-transform duration-300 lg:translate-x-0 lg:bg-[#24272C] lg:backdrop-blur-xl",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-16 items-center px-6 border-b border-white/8 gap-2 justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#CCFF00] text-[#556D00]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
               <Wallet className="h-6 w-6 animate-pulse" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-white font-sans">Fintrack</h1>
-              <p className="text-[10px] text-emerald-400 font-medium tracking-wide uppercase">Financial Hub</p>
+              <p className="text-[10px] text-emerald-500 font-medium tracking-wide uppercase">Financial Hub</p>
             </div>
           </div>
           {/* Close button for mobile */}
@@ -78,13 +78,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className={clsx(
                   'group flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50',
                   isActive
-                    ? 'bg-[#CCFF00] text-[#556D00] border border-emerald-500/20 shadow-md shadow-emerald-500/5'
+                    ? 'bg-emerald-500 text-white border border-emerald-500/20 shadow-md shadow-emerald-500/5'
                     : 'text-slate-400 border border-transparent hover:bg-white/5 hover:text-slate-200'
                 )}
               >
                 <Icon className={clsx(
                   'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
-                  isActive ? 'text-[#556D00]' : 'text-slate-400 group-hover:text-slate-200'
+                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
                 )} />
                 {item.name}
               </Link>
@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/8 bg-[#26282A]">
+        <div className="p-4 border-t border-white/8 bg-[#24272C]">
           <div className="flex items-center gap-3 px-2 py-1.5">
             <div className="h-9 w-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-sm">
               FH
