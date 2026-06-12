@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const result = loginSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { email, password } = result.data;
