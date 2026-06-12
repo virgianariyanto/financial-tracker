@@ -13,6 +13,7 @@ import {
   TrendingDown,
   Percent,
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import BudgetForm from '@/components/forms/budget-form';
 
@@ -263,7 +264,10 @@ export default function BudgetsClient() {
                           borderColor: `${b.categoryColor}30`,
                         }}
                       >
-                        {b.categoryIcon.slice(0, 2)}
+                        {(() => {
+                          const IconComponent = (Icons as any)[b.categoryIcon] || Icons.HelpCircle;
+                          return <IconComponent className="h-5 w-5" />;
+                        })()}
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-slate-200">{b.categoryName}</h3>

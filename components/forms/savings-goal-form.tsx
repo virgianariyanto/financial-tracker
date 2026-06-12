@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { currencies } from '@/lib/currencies';
 
 const formSchema = z.object({
@@ -146,13 +147,16 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
               key={icon}
               type="button"
               onClick={() => setValue('icon', icon)}
-              className={`p-2 rounded-lg text-[10px] font-medium transition-all border ${selectedIcon === icon
+              className={`p-2 rounded-lg flex items-center justify-center transition-all border ${selectedIcon === icon
                 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                 : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
                 }`}
               title={icon}
             >
-              {icon.slice(0, 3)}
+              {(() => {
+                const IconComponent = (Icons as any)[icon] || Icons.HelpCircle;
+                return <IconComponent className="h-5 w-5" />;
+              })()}
             </button>
           ))}
         </div>
@@ -189,7 +193,10 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
             borderColor: `${selectedColor}30`
           }}
         >
-          {selectedIcon.slice(0, 2)}
+          {(() => {
+            const IconComponent = (Icons as any)[selectedIcon] || Icons.HelpCircle;
+            return <IconComponent className="h-5 w-5" />;
+          })()}
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-200">

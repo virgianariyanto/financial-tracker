@@ -11,6 +11,7 @@ import {
   ArrowDownLeft,
   AlertTriangle,
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import CategoryForm from '@/components/forms/category-form';
 
@@ -141,7 +142,10 @@ export default function CategoriesClient() {
                     borderColor: `${cat.color}30`,
                   }}
                 >
-                  {cat.icon.slice(0, 2)}
+                  {(() => {
+                    const IconComponent = (Icons as any)[cat.icon] || Icons.HelpCircle;
+                    return <IconComponent className="h-5 w-5" />;
+                  })()}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-200">{cat.name}</p>

@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import SavingsGoalForm from '@/components/forms/savings-goal-form';
 import SavingsContributionForm from '@/components/forms/savings-contribution-form';
@@ -271,7 +272,10 @@ export default function SavingsClient() {
                           borderColor: `${goal.color}30`,
                         }}
                       >
-                        {goal.icon.slice(0, 2)}
+                        {(() => {
+                          const IconComponent = (Icons as any)[goal.icon] || Icons.HelpCircle;
+                          return <IconComponent className="h-5 w-5" />;
+                        })()}
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-slate-200 line-clamp-1">{goal.name}</h3>

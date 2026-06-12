@@ -9,7 +9,7 @@ import {
   TrendingUp,
   Settings,
   FolderTree,
-  DollarSign
+  Wallet
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex h-16 items-center px-6 border-b border-white/8 gap-2 justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#CCFF00] text-[#556D00]">
-              <DollarSign className="h-6 w-6 animate-pulse" />
+              <Wallet className="h-6 w-6 animate-pulse" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-white font-sans">Fintrack</h1>
