@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const updateGoalSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -18,6 +19,11 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const goal = await prisma.savingsGoal.findUnique({
       where: { id },
       include: {
@@ -29,7 +35,7 @@ export async function GET(
       },
     });
 
-    if (!goal) {
+    if (!goal || goal.userId !== userId) {
       return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
     }
 
@@ -46,16 +52,21 @@ export async function PATCH(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const existing = await prisma.savingsGoal.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const result = updateGoalSchema.safeParse(body);
 
     if (!result.success) {
       return NextResponse.json({ errors: result.error.flatten() }, { status: 400 });
-    }
-
-    const existing = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
     }
 
     const goal = await prisma.savingsGoal.update({
@@ -76,8 +87,13 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const existing = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!existing) {
+    if (!existing || existing.userId !== userId) {
       return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
     }
 
@@ -89,3 +105,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

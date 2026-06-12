@@ -19,9 +19,23 @@ enum BudgetPeriod {
   WEEKLY
 }
 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories    Category[]
+  transactions  Transaction[]
+  savingsGoals  SavingsGoal[]
+  budgets       Budget[]
+}
+
 model Category {
   id        String          @id @default(uuid())
-  name      String          @unique
+  name      String
   icon      String          // Lucide icon name string
   color     String          // hex color or tailwind class name
   type      TransactionType
@@ -31,6 +45,11 @@ model Category {
 
   transactions Transaction[]
   budgets      Budget[]
+
+  userId    String?
+  user      User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([name, userId])
 }
 
 model Transaction {
@@ -46,6 +65,9 @@ model Transaction {
 
   categoryId  String
   category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavingsGoal {
@@ -61,6 +83,9 @@ model SavingsGoal {
   updatedAt     DateTime              @updatedAt
 
   contributions SavingsContribution[]
+
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavingsContribution {
@@ -87,5 +112,8 @@ model Budget {
   categoryId String
   category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@unique([categoryId, month, year, period])
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, month, year, period])
 }

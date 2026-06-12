@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const savingsGoalSchema = z.object({
   name: z.string().min(1, 'Goal name is required').max(100),
@@ -14,7 +15,13 @@ const savingsGoalSchema = z.object({
 
 export async function GET() {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const goals = await prisma.savingsGoal.findMany({
+      where: { userId },
       include: {
         _count: {
           select: { contributions: true },
@@ -33,6 +40,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const result = savingsGoalSchema.safeParse(body);
 
@@ -41,7 +53,10 @@ export async function POST(request: Request) {
     }
 
     const goal = await prisma.savingsGoal.create({
-      data: result.data,
+      data: {
+        ...result.data,
+        userId,
+      },
     });
 
     return NextResponse.json(goal, { status: 201 });
@@ -50,3 +65,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

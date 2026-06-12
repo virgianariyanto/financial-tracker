@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const updateCategorySchema = z.object({
   name: z.string().min(1).max(50).optional(),
@@ -15,6 +16,11 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -24,7 +30,7 @@ export async function GET(
       },
     });
 
-    if (!category) {
+    if (!category || (category.userId !== null && category.userId !== userId)) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
 
@@ -41,6 +47,11 @@ export async function PATCH(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const result = updateCategorySchema.safeParse(body);
 
@@ -49,14 +60,28 @@ export async function PATCH(
     }
 
     const existing = await prisma.category.findUnique({ where: { id } });
-    if (!existing) {
+    if (!existing || (existing.userId !== null && existing.userId !== userId)) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    }
+
+    // Default categories cannot be edited by normal users
+    if (existing.userId === null) {
+      return NextResponse.json({ error: 'Cannot modify default categories' }, { status: 403 });
     }
 
     // Check for duplicate name if name is being changed
     if (result.data.name && result.data.name !== existing.name) {
-      const duplicate = await prisma.category.findUnique({
-        where: { name: result.data.name },
+      const duplicate = await prisma.category.findFirst({
+        where: {
+          name: {
+            equals: result.data.name,
+            mode: 'insensitive',
+          },
+          OR: [
+            { userId: null },
+            { userId },
+          ],
+        },
       });
       if (duplicate) {
         return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
@@ -81,6 +106,11 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const existing = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -90,8 +120,12 @@ export async function DELETE(
       },
     });
 
-    if (!existing) {
+    if (!existing || (existing.userId !== null && existing.userId !== userId)) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    }
+
+    if (existing.userId === null) {
+      return NextResponse.json({ error: 'Cannot delete default categories' }, { status: 403 });
     }
 
     if (existing._count.transactions > 0) {
@@ -109,3 +143,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

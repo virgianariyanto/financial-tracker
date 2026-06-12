@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const contributionSchema = z.object({
   amount: z.number().positive('Contribution amount must be positive'),
@@ -14,6 +15,19 @@ export async function GET(
 ) {
   const { id: goalId } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const goal = await prisma.savingsGoal.findUnique({
+      where: { id: goalId },
+    });
+
+    if (!goal || goal.userId !== userId) {
+      return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
+    }
+
     const contributions = await prisma.savingsContribution.findMany({
       where: { goalId },
       orderBy: { date: 'desc' },
@@ -31,6 +45,11 @@ export async function POST(
 ) {
   const { id: goalId } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const result = contributionSchema.safeParse(body);
 
@@ -42,7 +61,7 @@ export async function POST(
       where: { id: goalId },
     });
 
-    if (!goal) {
+    if (!goal || goal.userId !== userId) {
       return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
     }
 
@@ -69,3 +88,4 @@ export async function POST(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

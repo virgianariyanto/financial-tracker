@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const updateBudgetSchema = z.object({
   amount: z.number().positive('Budget amount must be positive'),
@@ -13,16 +14,21 @@ export async function PATCH(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const existing = await prisma.budget.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const result = updateBudgetSchema.safeParse(body);
 
     if (!result.success) {
       return NextResponse.json({ errors: result.error.flatten() }, { status: 400 });
-    }
-
-    const existing = await prisma.budget.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
     }
 
     const budget = await prisma.budget.update({
@@ -43,8 +49,13 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const existing = await prisma.budget.findUnique({ where: { id } });
-    if (!existing) {
+    if (!existing || existing.userId !== userId) {
       return NextResponse.json({ error: 'Budget not found' }, { status: 404 });
     }
 
@@ -56,3 +67,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

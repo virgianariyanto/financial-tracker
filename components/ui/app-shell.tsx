@@ -3,9 +3,17 @@
 import { useState } from 'react';
 import Sidebar from '@/components/ui/sidebar';
 import { Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  if (isAuthPage) {
+    return <div className="min-h-screen w-full bg-[#111318] text-slate-200 flex flex-col">{children}</div>;
+  }
 
   return (
     <div className="min-h-full flex text-slate-200 w-full">
@@ -35,3 +43,4 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

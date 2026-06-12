@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const budgetSchema = z.object({
   categoryId: z.string().uuid(),
@@ -13,6 +14,11 @@ const budgetSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const now = new Date();
     const month = parseInt(searchParams.get('month') || String(now.getMonth() + 1), 10);
@@ -23,23 +29,31 @@ export async function GET(request: Request) {
 
     // 1. Fetch all expense categories
     const categories = await prisma.category.findMany({
-      where: { type: 'EXPENSE' },
+      where: {
+        type: 'EXPENSE',
+        OR: [
+          { userId: null },
+          { userId },
+        ],
+      },
       orderBy: { name: 'asc' },
     });
 
-    // 2. Fetch budgets for this period
+    // 2. Fetch budgets for this period and user
     const budgets = await prisma.budget.findMany({
       where: {
+        userId,
         month,
         year,
         period: 'MONTHLY',
       },
     });
 
-    // 3. Aggregate transactions by category for this period
+    // 3. Aggregate transactions by category for this period and user
     const transactionsGrouped = await prisma.transaction.groupBy({
       by: ['categoryId'],
       where: {
+        userId,
         type: 'EXPENSE',
         date: {
           gte: startDate,
@@ -78,6 +92,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const result = budgetSchema.safeParse(body);
 
@@ -88,8 +107,14 @@ export async function POST(request: Request) {
     const { categoryId, amount, currency, period, month, year } = result.data;
 
     // Check if category exists
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
+    const category = await prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        OR: [
+          { userId: null },
+          { userId },
+        ],
+      },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
@@ -97,7 +122,8 @@ export async function POST(request: Request) {
 
     const budget = await prisma.budget.upsert({
       where: {
-        categoryId_month_year_period: {
+        userId_categoryId_month_year_period: {
+          userId,
           categoryId,
           month,
           year,
@@ -109,6 +135,7 @@ export async function POST(request: Request) {
         currency,
       },
       create: {
+        userId,
         categoryId,
         amount,
         currency,
@@ -124,3 +151,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

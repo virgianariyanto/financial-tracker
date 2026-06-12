@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const transactionSchema = z.object({
   amount: z.coerce.number().positive(),
@@ -14,6 +15,11 @@ const transactionSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const categoryId = searchParams.get('categoryId');
@@ -21,7 +27,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('endDate');
     const search = searchParams.get('search');
 
-    const where: any = {};
+    const where: any = { userId };
 
     if (type === 'INCOME' || type === 'EXPENSE') {
       where.type = type;
@@ -60,6 +66,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const result = transactionSchema.safeParse(body);
 
@@ -69,6 +80,21 @@ export async function POST(request: Request) {
 
     const { amount, currency, type, description, date, categoryId, tags } = result.data;
 
+    // Verify category exists and is accessible
+    const category = await prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        OR: [
+          { userId: null },
+          { userId },
+        ],
+      },
+    });
+
+    if (!category) {
+      return NextResponse.json({ error: 'Category not found or access denied' }, { status: 404 });
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         amount,
@@ -77,6 +103,7 @@ export async function POST(request: Request) {
         description,
         date,
         categoryId,
+        userId,
         tags: tags || [],
       },
       include: {
@@ -90,3 +117,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

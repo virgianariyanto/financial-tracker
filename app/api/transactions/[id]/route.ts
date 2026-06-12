@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { getAuthUserId } from '@/lib/auth';
 
 const updateSchema = z.object({
   amount: z.coerce.number().positive().optional(),
@@ -17,7 +18,20 @@ export async function DELETE(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await props.params;
+
+    const existing = await prisma.transaction.findUnique({
+      where: { id },
+    });
+
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
 
     const transaction = await prisma.transaction.delete({
       where: { id },
@@ -35,12 +49,43 @@ export async function PATCH(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await props.params;
+
+    const existing = await prisma.transaction.findUnique({
+      where: { id },
+    });
+
+    if (!existing || existing.userId !== userId) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const result = updateSchema.safeParse(body);
 
     if (!result.success) {
       return NextResponse.json({ errors: result.error.flatten() }, { status: 400 });
+    }
+
+    // Verify category if categoryId is updated
+    if (result.data.categoryId) {
+      const category = await prisma.category.findFirst({
+        where: {
+          id: result.data.categoryId,
+          OR: [
+            { userId: null },
+            { userId },
+          ],
+        },
+      });
+
+      if (!category) {
+        return NextResponse.json({ error: 'Category not found or access denied' }, { status: 404 });
+      }
     }
 
     const transaction = await prisma.transaction.update({
@@ -57,3 +102,4 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

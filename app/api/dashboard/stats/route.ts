@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { getAuthUserId } from '@/lib/auth';
 
 export async function GET() {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const transactions = await prisma.transaction.findMany({
+      where: { userId },
       include: {
         category: true,
       },
@@ -12,14 +19,24 @@ export async function GET() {
       },
     });
 
-    const categories = await prisma.category.findMany();
+    const categories = await prisma.category.findMany({
+      where: {
+        OR: [
+          { userId: null },
+          { userId },
+        ],
+      },
+    });
+
     const savingsGoals = await prisma.savingsGoal.findMany({
+      where: { userId },
       include: {
         contributions: true,
       },
     });
 
     const budgets = await prisma.budget.findMany({
+      where: { userId },
       include: {
         category: true,
       },
@@ -99,3 +116,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
