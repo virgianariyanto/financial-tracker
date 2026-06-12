@@ -229,7 +229,12 @@ export default function DashboardClient() {
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                         <span className="text-slate-400 font-medium">{entry.name}</span>
                       </div>
-                      <span className="font-semibold text-slate-200">{formatCurrency(entry.value)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-500 font-semibold font-mono">
+                          {summary.totalExpense > 0 ? ((entry.value / summary.totalExpense) * 100).toFixed(1) : 0}%
+                        </span>
+                        <span className="font-semibold text-slate-200">{formatCurrency(entry.value)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
