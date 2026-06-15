@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -28,12 +28,17 @@ export default function SavingsContributionForm({ goalCurrency, onSubmit, onCanc
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
-      date: new Date().toISOString().split('T')[0],
+      date: '',
       note: '',
     },
   });
 
   const [displayAmount, setDisplayAmount] = useState('');
+
+  // Set default date on client side to avoid hydration mismatch
+  useEffect(() => {
+    setValue('date', new Date().toISOString().split('T')[0]);
+  }, [setValue]);
 
   const handleFormSubmit = async (values: FormValues) => {
     setSubmitting(true);

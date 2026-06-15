@@ -43,7 +43,7 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
       currency: initialValues?.currency || 'IDR',
       type: initialValues?.type || 'EXPENSE',
       description: initialValues?.description || '',
-      date: initialValues?.date ? new Date(initialValues.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      date: initialValues?.date ? new Date(initialValues.date).toISOString().split('T')[0] : '',
       categoryId: initialValues?.categoryId || '',
       tagsString: initialValues?.tags ? initialValues.tags.join(', ') : '',
     }
@@ -61,6 +61,13 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
       setDisplayAmount(Number(initialValues.amount).toLocaleString('id-ID'));
     }
   }, [initialValues]);
+
+  useEffect(() => {
+    // Set default date on client side to avoid hydration mismatch
+    if (!initialValues?.date) {
+      setValue('date', new Date().toISOString().split('T')[0]);
+    }
+  }, [initialValues, setValue]);
 
   useEffect(() => {
     if (!initialValues?.currency) {
