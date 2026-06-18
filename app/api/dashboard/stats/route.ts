@@ -46,7 +46,7 @@ export async function GET() {
     let totalIncome = 0;
     let totalExpense = 0;
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx: any) => {
       if (tx.type === 'INCOME') {
         totalIncome += tx.amount;
       } else {
@@ -54,13 +54,13 @@ export async function GET() {
       }
     });
 
-    const totalSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+    const totalSavings = savingsGoals.reduce((sum, goal: any) => sum + goal.currentAmount, 0);
 
     // Category breakdown (Expenses only)
     const categoryBreakdown: { [name: string]: { amount: number; color: string } } = {};
     transactions
-      .filter(tx => tx.type === 'EXPENSE')
-      .forEach(tx => {
+      .filter((tx: any) => tx.type === 'EXPENSE')
+      .forEach((tx: any) => {
         const catName = tx.category.name;
         if (!categoryBreakdown[catName]) {
           categoryBreakdown[catName] = { amount: 0, color: tx.category.color };
@@ -76,7 +76,7 @@ export async function GET() {
 
     // Monthly trends (Last 6 months)
     const monthlyTrendsMap: { [monthStr: string]: { income: number; expenses: number } } = {};
-    transactions.forEach(tx => {
+    transactions.forEach((tx: any) => {
       const date = new Date(tx.date);
       const monthStr = date.toLocaleString('en-US', { month: 'short', year: '2-digit' });
       if (!monthlyTrendsMap[monthStr]) {
