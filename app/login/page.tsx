@@ -72,7 +72,7 @@ export default function LoginPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
                 <Wallet className="h-5.5 w-5.5" />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">Fintrack</span>
+              <span className="text-xl font-bold text-white tracking-tight">Finora</span>
             </div>
             <p className="text-sm text-slate-500 ml-0.5">Smart financial management</p>
           </div>
@@ -140,7 +140,7 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">Fintrack</span>
+            <span className="text-lg font-bold text-white tracking-tight">Finora</span>
           </div>
 
           {/* Heading */}
@@ -262,7 +262,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-center text-[10px] text-slate-700 mt-8">
-            By continuing, you agree to Fintrack&apos;s Terms of Service
+            By continuing, you agree to Finora&apos;s Terms of Service
           </p>
         </div>
       </div>

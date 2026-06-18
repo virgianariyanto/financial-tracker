@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fintrack — Premium Financial Tracker",
+  title: "Finora — Premium Financial Tracker",
   description: "Track your personal and family expenses, savings goals, and budgets seamlessly.",
 };
 

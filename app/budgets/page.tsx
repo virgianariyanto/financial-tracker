@@ -1,7 +1,7 @@
 import BudgetsClient from '@/components/budgets-client';
 
 export const metadata = {
-  title: 'Spending Plans — Fintrack',
+  title: 'Spending Plans — Finora',
   description: 'Manage monthly budget limits and monitor category-wise expenses.',
 };
 

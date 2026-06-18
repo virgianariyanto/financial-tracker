@@ -72,7 +72,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Wallet className="h-6 w-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-white font-sans">Fintrack</h1>
+              <h1 className="text-lg font-semibold tracking-tight text-white font-sans">Finora</h1>
               {/* <p className="text-[10px] text-emerald-500 font-medium tracking-wide uppercase">Financial Hub</p> */}
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <div className="p-4 bg-[#24272C]/70 backdrop-blur-xl rounded-xl flex flex-col gap-4 shadow-lg">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-center font-semibold text-slate-600">Copyright © 2026 Fintrack</p>
+            <p className="text-xs text-center font-semibold text-slate-600">Copyright © 2026 Finora</p>
           </div>
       </div>
       </aside>

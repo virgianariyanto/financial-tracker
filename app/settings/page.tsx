@@ -1,7 +1,7 @@
 import SettingsClient from '@/components/settings-client';
 
 export const metadata = {
-  title: 'Settings — Fintrack',
+  title: 'Settings — Finora',
   description: 'Manage your profile and workspace preferences.',
 };
 

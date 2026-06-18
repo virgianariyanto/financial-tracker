@@ -73,7 +73,7 @@ export default function RegisterPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
                 <Wallet className="h-5.5 w-5.5" />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">Fintrack</span>
+              <span className="text-xl font-bold text-white tracking-tight">Finora</span>
             </div>
             <p className="text-sm text-slate-500 ml-0.5">Start your financial journey</p>
           </div>
@@ -89,7 +89,7 @@ export default function RegisterPage() {
                 </span>
               </h1>
               <p className="mt-5 text-base text-slate-400 leading-relaxed max-w-md">
-                Join thousands of families who trust Fintrack to manage their finances and achieve their goals.
+                Join thousands of families who trust Finora to manage their finances and achieve their goals.
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
               <Wallet className="h-5 w-5" />
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">Fintrack</span>
+            <span className="text-lg font-bold text-white tracking-tight">Finora</span>
           </div>
 
           {/* Heading */}
@@ -292,7 +292,7 @@ export default function RegisterPage() {
 
           {/* Footer */}
           <p className="text-center text-[10px] text-slate-700 mt-8">
-            By creating an account, you agree to Fintrack&apos;s Terms of Service
+            By creating an account, you agree to Finora&apos;s Terms of Service
           </p>
         </div>
       </div>

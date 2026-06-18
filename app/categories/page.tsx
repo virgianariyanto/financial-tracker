@@ -1,7 +1,7 @@
 import CategoriesClient from '@/components/categories-client';
 
 export const metadata = {
-  title: 'Categories — Fintrack',
+  title: 'Categories — Finora',
   description: 'Manage and customize your expense and income categories.',
 };
 
