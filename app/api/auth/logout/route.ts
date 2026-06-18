@@ -6,7 +6,7 @@ export async function POST() {
   response.cookies.set('token', '', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge: 0,
     expires: new Date(0),
     path: '/',
@@ -20,7 +20,7 @@ export async function GET() {
   response.cookies.set('token', '', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge: 0,
     expires: new Date(0),
     path: '/',
