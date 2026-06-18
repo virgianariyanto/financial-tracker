@@ -66,9 +66,9 @@ export async function GET(request: Request) {
     });
 
     // Map together
-    const results = categories.map((category) => {
-      const budget = budgets.find((b) => b.categoryId === category.id) || null;
-      const txSum = transactionsGrouped.find((t) => t.categoryId === category.id);
+    const results = categories.map((category: any) => {
+      const budget = budgets.find((b: any) => b.categoryId === category.id) || null;
+      const txSum = transactionsGrouped.find((t: any) => t.categoryId === category.id);
       const actual = txSum?._sum.amount || 0;
 
       return {
