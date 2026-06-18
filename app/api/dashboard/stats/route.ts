@@ -54,7 +54,7 @@ export async function GET() {
       }
     });
 
-    const totalSavings = savingsGoals.reduce((sum, goal: any) => sum + goal.currentAmount, 0);
+    const totalSavings = savingsGoals.reduce((sum: number, goal: any) => sum + goal.currentAmount, 0);
 
     // Category breakdown (Expenses only)
     const categoryBreakdown: { [name: string]: { amount: number; color: string } } = {};
