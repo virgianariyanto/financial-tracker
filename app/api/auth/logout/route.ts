@@ -1,14 +1,29 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export async function POST() {
-  const cookieStore = await cookies();
-  cookieStore.delete('token');
-  return NextResponse.json({ success: true, message: 'Logged out successfully' });
+  const isProduction = process.env.NODE_ENV === 'production';
+  const response = NextResponse.json({ success: true, message: 'Logged out successfully' });
+  response.cookies.set('token', '', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 0,
+    expires: new Date(0),
+    path: '/',
+  });
+  return response;
 }
 
 export async function GET() {
-  const cookieStore = await cookies();
-  cookieStore.delete('token');
-  return NextResponse.json({ success: true, message: 'Logged out successfully' });
+  const isProduction = process.env.NODE_ENV === 'production';
+  const response = NextResponse.json({ success: true, message: 'Logged out successfully' });
+  response.cookies.set('token', '', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 0,
+    expires: new Date(0),
+    path: '/',
+  });
+  return response;
 }

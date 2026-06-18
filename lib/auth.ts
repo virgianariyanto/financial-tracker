@@ -1,9 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fintrack-secret-key-should-be-very-long-and-secure-12345'
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set');
+}
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function signJWT(payload: { id: string; email: string }) {
   return new SignJWT(payload)
@@ -17,7 +19,7 @@ export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return payload as { id: string; email: string };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

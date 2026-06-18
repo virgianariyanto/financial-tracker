@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 const registerSchema = z.object({
@@ -42,22 +41,25 @@ export async function POST(req: Request) {
 
     const token = await signJWT({ id: user.id, email: user.email });
 
-    const cookieStore = await cookies();
-    cookieStore.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
       },
     }, { status: 201 });
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

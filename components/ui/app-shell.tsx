@@ -8,10 +8,13 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  // ✅ ALL hooks must be declared at the top before any early return
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [currentDate, setCurrentDate] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
@@ -24,7 +27,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
     setCurrentDate(new Date().toLocaleDateString('en-US', options));
   }, []);
-
 
   useEffect(() => {
     if (isAuthPage) return;
@@ -42,10 +44,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, [pathname, isAuthPage]);
 
-  if (isAuthPage) {
-    return <div className="min-h-screen w-full bg-[#111318] text-slate-200 flex flex-col">{children}</div>;
-  }
-
+  // Helper: get user initials
   const getInitials = (name: string) => {
     if (!name) return 'U';
     return name
@@ -55,8 +54,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       .substring(0, 2)
       .toUpperCase();
   };
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -70,6 +67,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     }
   };
+
+  // ✅ Early return AFTER all hooks
+  if (isAuthPage) {
+    return <div className="min-h-screen w-full bg-[#111318] text-slate-200 flex flex-col">{children}</div>;
+  }
 
   return (
     <div className="min-h-full flex text-slate-200 w-full bg-[#111318]">
@@ -87,7 +89,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Elegant, Minimalist Date Display */}
+            {/* Date Display */}
             {currentDate && (
               <span className="hidden md:inline-block text-md font-semibold text-slate-400 tracking-wide pl-2 font-sans">
                 {currentDate}
@@ -145,5 +147,3 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-

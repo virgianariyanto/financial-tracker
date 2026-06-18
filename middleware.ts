@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fintrack-secret-key-should-be-very-long-and-secure-12345'
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set');
+}
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return payload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -28,7 +30,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  const isPrivateRoute = 
+  const isPrivateRoute =
     pathname === '/' ||
     pathname.startsWith('/transactions') ||
     pathname.startsWith('/budgets') ||
