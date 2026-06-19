@@ -46,6 +46,7 @@ interface DashboardStats {
 export default function DashboardClient() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -64,6 +65,18 @@ export default function DashboardClient() {
 
   useEffect(() => {
     fetchStats();
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error('Failed to load user info', err);
+      }
+    }
+    fetchUser();
   }, []);
 
   if (loading) {
@@ -86,10 +99,12 @@ export default function DashboardClient() {
       {/* Header Panel */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-emerald-500">Financial Dashboard</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-emerald-500">
+            Halo {user ? user.name.split(' ')[0] : ''} 😊
+          </h1>
           <p className="text-slate-400 text-sm mt-1">Real-time overview of your family budget and cash flow.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="md:flex gap-3 hidden">
           <Link
             href="/transactions"
             className="flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-colors"
