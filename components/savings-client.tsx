@@ -197,7 +197,7 @@ export default function SavingsClient() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Savings Goals</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-emerald-500">Savings Goals</h1>
           <p className="text-slate-400 text-sm">
             Set aside money and track your progress toward your dreams.
           </p>
@@ -207,7 +207,7 @@ export default function SavingsClient() {
             setEditingGoal(null);
             setIsGoalModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#064e3b] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Savings Goal

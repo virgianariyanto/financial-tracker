@@ -108,9 +108,9 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
             className="w-full glass-input"
             disabled={!!initialValues} // Cannot change category when editing an existing budget
           >
-            <option value="" className="bg-slate-900 text-slate-200">Select Category</option>
+            <option value="">Select Category</option>
             {categories.map(cat => (
-              <option key={cat.id} value={cat.id} className="bg-slate-900 text-slate-200">
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
@@ -145,7 +145,7 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
           <label className="text-xs font-semibold text-slate-400">Currency</label>
           <select {...register('currency')} className="w-full glass-input">
             {currencies.map(c => (
-              <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">{c.code}</option>
+              <option key={c.code} value={c.code}>{c.code}</option>
             ))}
           </select>
         </div>

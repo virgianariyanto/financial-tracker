@@ -59,10 +59,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
       />
-
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col bg-[#24272C] transition-transform duration-300 lg:translate-x-0 lg:bg-[#24272C] lg:backdrop-blur-xl",
+          "fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col bg-sidebar-bg transition-transform duration-300 lg:translate-x-0 lg:bg-sidebar-bg lg:backdrop-blur-xl",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -72,8 +71,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Wallet className="h-6 w-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-white font-sans">Finora</h1>
-              {/* <p className="text-[10px] text-emerald-500 font-medium tracking-wide uppercase">Financial Hub</p> */}
+              <h1 className="text-2xl font-semibold tracking-tighter text-foreground font-sans">Finora</h1>
             </div>
           </div>
           {/* Close button for mobile */}
@@ -111,11 +109,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        <div className="p-4 bg-[#24272C]/70 backdrop-blur-xl rounded-xl flex flex-col gap-4 shadow-lg">
+        <div className="p-4 bg-sidebar-bg/70 backdrop-blur-xl rounded-xl flex flex-col gap-4 shadow-lg">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-center font-semibold text-slate-600">Copyright © 2026 Finora</p>
           </div>
-      </div>
+        </div>
       </aside>
     </>
   );

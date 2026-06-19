@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/ui/sidebar';
-import { Menu, Bell, Settings, LogOut } from 'lucide-react';
+import { Menu, Bell, Settings, LogOut, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -13,10 +13,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [currentDate, setCurrentDate] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const pathname = usePathname();
   const router = useRouter();
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  useEffect(() => {
+    const isLight = document.documentElement.classList.contains('light');
+    setTheme(isLight ? 'light' : 'dark');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  };
 
   useEffect(() => {
     const options: Intl.DateTimeFormatOptions = {
@@ -70,16 +87,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   // ✅ Early return AFTER all hooks
   if (isAuthPage) {
-    return <div className="min-h-screen w-full bg-[#111318] text-slate-200 flex flex-col">{children}</div>;
+    return <div className="min-h-screen w-full bg-background text-slate-200 flex flex-col">{children}</div>;
   }
 
   return (
-    <div className="min-h-full flex text-slate-200 w-full bg-[#111318]">
+    <div className="min-h-full flex text-slate-200 w-full bg-background">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 pl-0 lg:pl-[260px] min-h-screen flex flex-col w-full">
         {/* Global Premium Header */}
-        <header className="flex h-16 items-center justify-between px-6 bg-[#111318]/90 backdrop-blur-md sticky top-0 z-20 w-full">
+        <header className="flex h-16 items-center justify-between px-6 bg-header-bg backdrop-blur-md sticky top-0 z-20 w-full">
           <div className="flex items-center gap-4 flex-1">
             {/* Mobile Menu Toggle */}
             <button
@@ -99,10 +116,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-4">
+            {/* Theme Toggle Switch */}
+            <button
+              onClick={toggleTheme}
+              className="relative p-2.5 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+            </button>
+
             {/* Notification Bell */}
             <button className="relative p-2.5 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
               <Bell className="h-4.5 w-4.5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-[#111318]" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-background" />
             </button>
 
             {/* User Profile Info */}
@@ -119,7 +145,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   </button>
                   {menuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-[#24272C] backdrop-blur-xl rounded-xl shadow-lg border border-white/10 z-20">
+                    <div className="absolute right-0 mt-2 w-48 bg-sidebar-bg backdrop-blur-xl rounded-xl shadow-lg border border-white/10 z-20">
                       <ul className="py-1">
                         <li className="cursor-pointer">
                           <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-slate-200 hover:bg-white/5">

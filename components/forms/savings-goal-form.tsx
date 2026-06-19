@@ -122,7 +122,7 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
           <label className="text-xs font-semibold text-slate-400 font-medium">Currency</label>
           <select {...register('currency')} className="w-full glass-input">
             {currencies.map(c => (
-              <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">{c.code}</option>
+              <option key={c.code} value={c.code}>{c.code}</option>
             ))}
           </select>
         </div>

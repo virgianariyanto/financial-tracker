@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
+  /* Default: Dark Mode */
   --background: #111318;
   --foreground: #f8fafc;
 
-  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-bg: rgba(255, 255, 255, 0.04);
   --card-border: rgba(255, 255, 255, 0.08);
 
   --primary: #10b981;
@@ -17,12 +18,84 @@
   --danger: #ef4444;
   --danger-hover: #dc2626;
 
+  --sidebar-bg: #24272C;
+  --header-bg: rgba(17, 19, 24, 0.9);
+
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-bg-hover: rgba(255, 255, 255, 0.05);
+  --input-border-hover: rgba(255, 255, 255, 0.15);
+  --input-bg-focus: rgba(255, 255, 255, 0.04);
+  --input-placeholder: rgba(248, 250, 252, 0.4);
+
+  --modal-bg: rgba(15, 18, 29, 0.95);
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --modal-shadow: rgba(0, 0, 0, 0.8);
+
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --card-shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 15px 0 var(--primary-glow);
+
   --sidebar-width: 260px;
+
+  /* Default Dark Slate Overrides */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+}
+
+.light {
+  /* Light Mode */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(15, 23, 42, 0.08);
+
+  --sidebar-bg: #f1f5f9;
+  --header-bg: rgba(248, 250, 252, 0.85);
+
+  --input-bg: rgba(7, 78, 241, 0.03);
+  --input-border: rgba(15, 23, 42, 0.08);
+  --input-border-hover: rgba(15, 23, 42, 0.15);
+  --input-bg-focus: rgba(6, 67, 209, 0.02);
+  --input-placeholder: rgba(15, 23, 42, 0.4);
+
+  --modal-bg: rgba(255, 255, 255, 0.98);
+  --modal-border: rgba(15, 23, 42, 0.08);
+  --modal-shadow: rgba(15, 23, 42, 0.15);
+
+  --card-shadow: 0 4px 16px 0 rgba(15, 23, 42, 0.04);
+  --card-shadow-hover: 0 8px 24px 0 rgba(15, 23, 42, 0.08), 0 0 12px 0 var(--primary-glow);
+
+  /* Light Slate Overrides (Inverted) */
+  --color-slate-50: #0f172a;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #334155;
+  --color-slate-300: #475569;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f1f5f9;
+  --color-slate-900: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-header-bg: var(--header-bg);
+  --color-modal-bg: var(--modal-bg);
+  --color-modal-border: var(--modal-border);
+  --color-modal-shadow: var(--modal-shadow);
+  
   --font-sans: var(--font-geist-sans), Inter, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 
@@ -87,46 +160,46 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--card-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: var(--card-shadow);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .glass-panel:hover {
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 15px 0 var(--primary-glow);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--input-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--input-border);
   color: var(--foreground);
   border-radius: 10px;
   padding: 10px 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0.1);
 }
 
 .glass-input:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--input-bg-hover);
+  border-color: var(--input-border-hover);
 }
 
 .glass-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--input-bg-focus);
   border-color: var(--primary);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 12px var(--primary-glow);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 12px var(--primary-glow);
 }
 
 .glass-input::placeholder {
-  color: rgba(248, 250, 252, 0.4);
+  color: var(--input-placeholder);
 }
 
 .glass-input option {
-  background-color: #0b0f19;
-  color: #f8fafc;
+  background-color: var(--sidebar-bg);
+  color: var(--foreground);
 }
 
 /* Custom Scrollbar */
@@ -156,4 +229,26 @@ aside {
 body.modal-open aside {
   filter: blur(8px);
   pointer-events: none;
+}
+
+/* Light Mode Global Element Overrides */
+.light [class*="border-white/"] {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light [class*="divide-white/"] > * + * {
+  border-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.light thead tr {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.2);
 }

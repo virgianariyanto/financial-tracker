@@ -45,7 +45,7 @@ export default function SettingsClient() {
   return (
     <div className="space-y-6 max-w-xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-emerald-500 font-sans">Settings</h1>
         <p className="text-slate-400 text-sm">
           Customize your preferences and workspace options.
         </p>
@@ -90,7 +90,7 @@ export default function SettingsClient() {
             className="w-full glass-input"
           >
             {currencies.map((c) => (
-              <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">
+              <option key={c.code} value={c.code}>
                 {c.code} — {c.name}
               </option>
             ))}

@@ -86,7 +86,7 @@ export default function DashboardClient() {
       {/* Header Panel */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Financial Dashboard</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-emerald-500">Financial Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">Real-time overview of your family budget and cash flow.</p>
         </div>
         <div className="flex gap-3">

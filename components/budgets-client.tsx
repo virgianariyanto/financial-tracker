@@ -149,7 +149,7 @@ export default function BudgetsClient() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white font-sans">Spending Plans (Budgets)</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-emerald-500 font-sans">Spending Plans (Budgets)</h1>
           <p className="text-slate-400 text-sm">
             Control your expenses by setting limits on your category outflows.
           </p>
@@ -159,7 +159,7 @@ export default function BudgetsClient() {
             setEditingBudget(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-[#064e3b] shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Set Category Budget

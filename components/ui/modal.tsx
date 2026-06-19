@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,8 +13,10 @@ interface ModalProps {
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -31,25 +34,25 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
       {/* Backdrop click close */}
       <div className="absolute inset-0" onClick={onClose} />
       
       <div 
         ref={modalRef}
-        className="relative w-full max-w-lg bg-[#0F121D]/90 border border-white/10 shadow-2xl shadow-black/80 rounded-2xl p-6 overflow-hidden animate-scale-in z-10"
+        className="relative w-full max-w-lg bg-modal-bg border border-modal-border shadow-2xl shadow-modal-shadow rounded-2xl p-6 overflow-hidden animate-scale-in z-10"
       >
         {/* Top Accent Gradient Border */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#10b981] to-transparent opacity-80" />
 
         <div className="flex items-center justify-between pb-4 border-b border-white/5">
-          <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
+          <h2 className="text-lg font-bold text-foreground tracking-wide">{title}</h2>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:bg-white/5 hover:text-white transition-all active:scale-90 duration-200"
+            className="p-1.5 rounded-full text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all active:scale-90 duration-200"
           >
             <X className="h-5 w-5" />
           </button>
@@ -59,6 +62,8 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+
