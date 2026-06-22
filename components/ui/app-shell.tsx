@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/ui/sidebar';
-import { Menu, Bell, Settings, LogOut, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, Settings, LogOut, Sun, Moon, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import { useCurrency } from '@/components/currency-context';
+import { formatCurrency } from '@/lib/currencies';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   // ✅ ALL hooks must be declared at the top before any early return
@@ -13,9 +15,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [currentDate, setCurrentDate] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
+  const [budgetWarnings, setBudgetWarnings] = useState<any[]>([]);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const pathname = usePathname();
   const router = useRouter();
+  
+  const { defaultCurrency } = useCurrency();
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
@@ -60,6 +66,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
     fetchUser();
   }, [pathname, isAuthPage]);
+
+  useEffect(() => {
+    if (isAuthPage || !defaultCurrency) return;
+    async function fetchBudgets() {
+      try {
+        const res = await fetch(`/api/budgets?currency=${defaultCurrency}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const warnings = data.filter(b => b.id && b.amount > 0 && (b.actual / b.amount) >= 0.8);
+          setBudgetWarnings(warnings);
+        }
+      } catch (err) {
+        console.error('Failed to load budget warnings', err);
+      }
+    }
+    fetchBudgets();
+  }, [pathname, isAuthPage, defaultCurrency]);
 
   // Helper: get user initials
   const getInitials = (name: string) => {
@@ -126,10 +149,52 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Notification Bell */}
-            <button className="relative p-2.5 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
-              <Bell className="h-4.5 w-4.5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-background" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setBellOpen(!bellOpen)}
+                className="relative p-2.5 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+              >
+                <Bell className="h-4.5 w-4.5" />
+                {budgetWarnings.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+                )}
+              </button>
+              
+              {bellOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-sidebar-bg backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 z-50 overflow-hidden flex flex-col">
+                  <div className="p-4 border-b border-white/10 bg-slate-900/40">
+                    <h4 className="text-sm font-bold text-slate-200">Notifications</h4>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {budgetWarnings.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-slate-400">
+                        No new notifications
+                      </div>
+                    ) : (
+                      budgetWarnings.map((w, i) => {
+                        const pct = Math.round((w.actual / w.amount) * 100);
+                        const isExceeded = pct >= 100;
+                        return (
+                          <Link href="/budgets" key={i} onClick={() => setBellOpen(false)} className="flex gap-3 p-3 rounded-xl hover:bg-slate-800 transition-colors items-start">
+                            <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${isExceeded ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                              <AlertTriangle className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-semibold ${isExceeded ? 'text-red-500' : 'text-amber-500'}`}>
+                                {isExceeded ? 'Budget Exceeded!' : 'Budget Warning'}
+                              </p>
+                              <p className="text-xs text-slate-300 mt-1">
+                                <strong className="text-slate-200">{w.categoryName}</strong> is at {pct}% ({formatCurrency(w.actual, defaultCurrency)} / {formatCurrency(w.amount, defaultCurrency)})
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User Profile Info */}
             <div className="flex items-center gap-3 pl-2 border-l border-white/8">
@@ -155,12 +220,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <div className="absolute right-0 mt-2 w-48 bg-sidebar-bg backdrop-blur-xl rounded-xl shadow-lg border border-white/10 z-20">
                       <ul className="py-1">
                         <li className="cursor-pointer">
-                          <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-slate-200 hover:bg-white/5">
+                          <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-slate-200 hover:bg-slate-800">
                             <Settings className="h-4 w-4 mr-2" /> Settings
                           </Link>
                         </li>
                         <li className="cursor-pointer">
-                          <button onClick={handleLogout} className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 cursor-pointer">
+                          <button onClick={handleLogout} className="flex w-full items-center px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 cursor-pointer">
                             <LogOut className="h-4 w-4 mr-2" /> Sign Out
                           </button>
                         </li>

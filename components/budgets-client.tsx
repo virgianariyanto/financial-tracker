@@ -327,7 +327,7 @@ export default function BudgetsClient() {
                       </div>
 
                       {/* Bar */}
-                      <div className="h-1.5 w-full bg-slate-950 border border-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-900 border border-white/5 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-300"
                           style={{

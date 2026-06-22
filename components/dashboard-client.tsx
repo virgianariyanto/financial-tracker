@@ -9,7 +9,8 @@ import {
   TrendingUp,
   Plus,
   RefreshCw,
-  Tag
+  Tag,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
@@ -47,16 +48,28 @@ interface DashboardStats {
 export default function DashboardClient() {
   const { defaultCurrency } = useCurrency();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [budgetWarnings, setBudgetWarnings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   const fetchStats = async (currencyCode: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/dashboard/stats?currency=${currencyCode}`);
-      const data = await res.json();
-      if (data && data.summary) {
-        setStats(data);
+      const [statsRes, budgetsRes] = await Promise.all([
+        fetch(`/api/dashboard/stats?currency=${currencyCode}`),
+        fetch(`/api/budgets?currency=${currencyCode}`)
+      ]);
+      const statsData = await statsRes.json();
+      const budgetsData = await budgetsRes.json();
+
+      if (statsData && statsData.summary) {
+        setStats(statsData);
+      }
+      
+      if (Array.isArray(budgetsData)) {
+        // Find budgets >= 80%
+        const warnings = budgetsData.filter(b => b.id && b.amount > 0 && (b.actual / b.amount) >= 0.8);
+        setBudgetWarnings(warnings);
       }
     } catch (err) {
       console.error('Failed to load dashboard data', err);
@@ -122,6 +135,46 @@ export default function DashboardClient() {
           </Link>
         </div>
       </div>
+
+      {/* Budget Warnings Banner */}
+      {budgetWarnings.length > 0 && (
+        <div className="flex flex-col gap-3">
+          {budgetWarnings.map((warning, idx) => {
+            const pct = Math.round((warning.actual / warning.amount) * 100);
+            const isExceeded = pct >= 100;
+            return (
+              <div
+                key={idx}
+                className={`glass-panel rounded-2xl p-4 flex items-center gap-4 ${
+                  isExceeded
+                    ? 'border-red-500/30 bg-red-500/10'
+                    : 'border-amber-500/30 bg-amber-500/10'
+                } animate-fade-in`}
+              >
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
+                  isExceeded ? 'bg-red-500/20' : 'bg-amber-500/20'
+                }`}>
+                  <AlertTriangle className={`h-5 w-5 ${isExceeded ? 'text-red-400' : 'text-amber-400'}`} />
+                </div>
+                <div className="flex-1">
+                  <h4 className={`text-sm font-bold ${isExceeded ? 'text-red-400' : 'text-amber-400'}`}>
+                    {isExceeded ? 'Budget Exceeded!' : 'Warning! Budget Almost Depleted'}
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Your <strong className="text-slate-100">{warning.categoryName}</strong> expenses have reached {pct}% of your {formatCurrency(warning.amount, defaultCurrency)} budget.
+                  </p>
+                </div>
+                <Link
+                  href="/budgets"
+                  className="hidden sm:flex px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+                >
+                  View Budget
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
