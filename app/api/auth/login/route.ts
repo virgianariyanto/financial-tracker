@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth';
 import { z } from 'zod';
+import { rateLimit, getIpFromRequest } from '@/lib/rate-limit';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -10,6 +11,23 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Rate limit: max 5 percobaan login per IP per 15 menit
+  const ip = getIpFromRequest(req);
+  const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+  if (!rl.success) {
+    const retryAfterSec = Math.ceil((rl.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: `Terlalu banyak percobaan login. Coba lagi dalam ${Math.ceil(retryAfterSec / 60)} menit.` },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSec),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    );
+  }
+
   try {
     const body = await req.json();
     const result = loginSchema.safeParse(body);

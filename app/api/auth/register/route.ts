@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth';
 import { z } from 'zod';
+import { rateLimit, getIpFromRequest } from '@/lib/rate-limit';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -11,6 +12,23 @@ const registerSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Rate limit: max 3 pendaftaran per IP per 15 menit
+  const ip = getIpFromRequest(req);
+  const rl = rateLimit(`register:${ip}`, 3, 15 * 60 * 1000);
+  if (!rl.success) {
+    const retryAfterSec = Math.ceil((rl.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: `Terlalu banyak percobaan pendaftaran. Coba lagi dalam ${Math.ceil(retryAfterSec / 60)} menit.` },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSec),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    );
+  }
+
   try {
     const body = await req.json();
     const result = registerSchema.safeParse(body);
