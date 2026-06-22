@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { getAuthUserId } from '@/lib/auth';
@@ -39,7 +40,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Email already in use by another user' }, { status: 400 });
     }
 
-    const updateData: any = {
+    const updateData: Prisma.UserUpdateInput = {
       name,
       email,
       role,

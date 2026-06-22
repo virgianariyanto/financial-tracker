@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { getAuthUserId } from '@/lib/auth';
 import { z } from 'zod';
 
@@ -62,7 +63,7 @@ export async function PATCH(req: Request) {
 
     const { name, userName, preferredCurrency, currentPassword, newPassword } = result.data;
 
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
     if (name !== undefined) updateData.name = name;
     if (userName !== undefined) updateData.userName = userName;
     if (preferredCurrency !== undefined) updateData.preferredCurrency = preferredCurrency;
