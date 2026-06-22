@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   // ✅ ALL hooks must be declared at the top before any early return
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [currentDate, setCurrentDate] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -137,9 +137,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="relative">
                   <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-2.5 focus:outline-none cursor-pointer">
                     <div className="hidden sm:block text-right">
-                      <p className="text-xs font-semibold text-slate-200 leading-tight">{user.name}</p>
-                      <p className="text-[10px] text-slate-500">{user.email}</p>
-                    </div>
+                       <div className="flex items-center justify-end gap-1.5">
+                         <p className="text-xs font-semibold text-slate-200 leading-tight">{user.name}</p>
+                         {user.role === 'ADMIN' && (
+                           <span className="inline-flex items-center rounded-full bg-amber-500/15 border border-amber-500/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+                             Admin
+                           </span>
+                         )}
+                       </div>
+                       <p className="text-[10px] text-slate-500">{user.email}</p>
+                     </div>
                     <div className="h-9 w-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-xs shadow-md shadow-emerald-500/5">
                       {getInitials(user.name)}
                     </div>

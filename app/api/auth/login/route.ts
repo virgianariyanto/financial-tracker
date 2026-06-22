@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = await signJWT({ id: user.id, email: user.email });
+    const token = await signJWT({ id: user.id, email: user.email, role: user.role });
 
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     }, { status: 200 });
 

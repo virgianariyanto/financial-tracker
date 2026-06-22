@@ -12,7 +12,7 @@ function getJwtSecret() {
 async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
-    return payload;
+    return payload as { id: string; email: string; role: string };
   } catch {
     return null;
   }
@@ -41,6 +41,32 @@ export async function middleware(req: NextRequest) {
 
   if (isPrivateRoute && !user) {
     return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  // Admin route protection — hanya ADMIN yang boleh mengakses /admin
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isAdminApiRoute = pathname.startsWith('/api/admin');
+
+  if (isAdminRoute && !user) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  if (isAdminRoute && user && user.role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
+
+  if (isAdminApiRoute && !user) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (isAdminApiRoute && user && user.role !== 'ADMIN') {
+    return new NextResponse(
+      JSON.stringify({ error: 'Forbidden: Admin access required' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   const isPrivateApiRoute = pathname.startsWith('/api') && !isApiAuthRoute;

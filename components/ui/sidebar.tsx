@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -11,7 +11,7 @@ import {
   Settings,
   FolderTree,
   Wallet,
-  LogOut
+  Shield,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -31,8 +31,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -107,6 +106,31 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             );
           })}
+
+          {/* Admin menu — hanya muncul jika role ADMIN */}
+          {user?.role === 'ADMIN' && (
+            <div className="pt-3 mt-2 border-t border-white/8">
+              <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+                Administration
+              </p>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className={clsx(
+                  'group flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50',
+                  pathname.startsWith('/admin')
+                    ? 'bg-amber-500 text-white border border-amber-500/20 shadow-md shadow-amber-500/5'
+                    : 'text-amber-400 border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/10 hover:text-amber-300'
+                )}
+              >
+                <Shield className={clsx(
+                  'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
+                  pathname.startsWith('/admin') ? 'text-white' : 'text-amber-400'
+                )} />
+                Admin Panel
+              </Link>
+            </div>
+          )}
         </nav>
 
         <div className="p-4 bg-sidebar-bg/70 backdrop-blur-xl rounded-xl flex flex-col gap-4 shadow-lg">

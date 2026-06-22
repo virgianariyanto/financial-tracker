@@ -8,7 +8,7 @@ function getJwtSecret() {
   return new TextEncoder().encode(process.env.JWT_SECRET);
 }
 
-export async function signJWT(payload: { id: string; email: string }) {
+export async function signJWT(payload: { id: string; email: string; role: string }) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -19,7 +19,7 @@ export async function signJWT(payload: { id: string; email: string }) {
 export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
-    return payload as { id: string; email: string };
+    return payload as { id: string; email: string; role: string };
   } catch {
     return null;
   }

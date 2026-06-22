@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,45 +6,33 @@ datasource db {
   provider = "postgresql"
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
-}
-
-enum BudgetPeriod {
-  MONTHLY
-  WEEKLY
-}
-
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  categories    Category[]
-  transactions  Transaction[]
-  savingsGoals  SavingsGoal[]
-  budgets       Budget[]
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  role         UserRole      @default(USER)
+  budgets      Budget[]
+  categories   Category[]
+  savingsGoals SavingsGoal[]
+  transactions Transaction[]
 }
 
 model Category {
-  id        String          @id @default(uuid())
-  name      String
-  icon      String          // Lucide icon name string
-  color     String          // hex color or tailwind class name
-  type      TransactionType
-  isDefault Boolean         @default(false)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-
-  transactions Transaction[]
+  id           String          @id @default(uuid())
+  name         String
+  icon         String
+  color        String
+  type         TransactionType
+  isDefault    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  userId       String?
   budgets      Budget[]
-
-  userId    String?
-  user      User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@unique([name, userId])
 }
@@ -62,11 +47,9 @@ model Transaction {
   tags        String[]        @default([])
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-
   categoryId  String
-  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
   userId      String
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -81,10 +64,8 @@ model SavingsGoal {
   color         String
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
-
-  contributions SavingsContribution[]
-
   userId        String
+  contributions SavingsContribution[]
   user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -94,7 +75,6 @@ model SavingsContribution {
   date      DateTime    @default(now())
   note      String?
   createdAt DateTime    @default(now())
-
   goalId    String
   goal      SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 }
@@ -104,16 +84,29 @@ model Budget {
   amount     Float
   currency   String       @default("IDR")
   period     BudgetPeriod @default(MONTHLY)
-  month      Int          // 1-12
+  month      Int
   year       Int
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-
   categoryId String
-  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
   userId     String
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, categoryId, month, year, period])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum BudgetPeriod {
+  MONTHLY
+  WEEKLY
 }
