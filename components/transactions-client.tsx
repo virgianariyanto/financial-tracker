@@ -11,7 +11,9 @@ import {
   Calendar,
   Filter,
   RefreshCw,
-  Tag
+  Tag,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import TransactionForm from '@/components/forms/transaction-form';
@@ -54,7 +56,13 @@ export default function TransactionsClient() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const fetchTransactions = async () => {
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 20;
+
+  const fetchTransactions = async (currentPage = page) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
@@ -63,10 +71,14 @@ export default function TransactionsClient() {
       if (catFilter) queryParams.set('categoryId', catFilter);
       if (startDate) queryParams.set('startDate', startDate);
       if (endDate) queryParams.set('endDate', endDate);
+      queryParams.set('page', String(currentPage));
+      queryParams.set('limit', String(LIMIT));
 
       const res = await fetch(`/api/transactions?${queryParams.toString()}`);
       const data = await res.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      setTransactions(Array.isArray(data.data) ? data.data : []);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
     } catch (err) {
       console.error('Failed to load transactions', err);
     } finally {
@@ -75,8 +87,13 @@ export default function TransactionsClient() {
   };
 
   useEffect(() => {
-    fetchTransactions();
+    setPage(1);
+    fetchTransactions(1);
   }, [typeFilter, catFilter, startDate, endDate]);
+
+  useEffect(() => {
+    fetchTransactions(page);
+  }, [page]);
 
   useEffect(() => {
     async function loadCategories() {
@@ -93,7 +110,8 @@ export default function TransactionsClient() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchTransactions();
+    setPage(1);
+    fetchTransactions(1);
   };
 
   const handleAddOrEdit = async (payload: any) => {
@@ -146,8 +164,8 @@ export default function TransactionsClient() {
       setCatFilter('');
       setStartDate('');
       setEndDate('');
+      setPage(1);
     });
-    // Triggers refetch since states update
   };
 
   return (
@@ -360,6 +378,40 @@ export default function TransactionsClient() {
           </div>
         )}
       </div>
+
+      {/* Pagination Bar */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between glass-panel rounded-2xl px-5 py-3">
+          <p className="text-xs text-slate-500">
+            Menampilkan{' '}
+            <span className="font-semibold text-slate-300">
+              {Math.min((page - 1) * LIMIT + 1, total)}–{Math.min(page * LIMIT, total)}
+            </span>{' '}
+            dari <span className="font-semibold text-slate-300">{total}</span> transaksi
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/5 text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Prev
+            </button>
+            <span className="text-xs text-slate-500 px-2">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/5 text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Transaction Modal */}
       <Modal
