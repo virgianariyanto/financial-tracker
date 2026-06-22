@@ -12,6 +12,7 @@ import {
   FolderTree,
   Wallet,
   Shield,
+  Users,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -123,11 +124,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     : 'text-amber-400 border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/10 hover:text-amber-300'
                 )}
               >
-                <Shield className={clsx(
+                <Users className={clsx(
                   'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
                   pathname.startsWith('/admin') ? 'text-white' : 'text-amber-400'
                 )} />
-                Admin Panel
+                Management User
               </Link>
             </div>
           )}
