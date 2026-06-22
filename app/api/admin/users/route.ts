@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -14,6 +16,7 @@ const createUserSchema = z.object({
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
+      where: { deletedAt: null },
       select: {
         id: true,
         name: true,

@@ -90,12 +90,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Lakukan penghapusan (Prisma akan menghapus relasi cascade jika di-setup, tapi jika tidak kita delete saja)
-    await prisma.user.delete({
+    // Lakukan penghapusan (soft delete)
+    await prisma.user.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
 
-    return NextResponse.json({ success: true, message: 'User deleted successfully' });
+    return NextResponse.json({ success: true, message: 'User soft-deleted successfully' });
   } catch (error) {
     console.error('Admin delete user error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -15,6 +15,7 @@ model User {
   preferredCurrency String        @default("IDR")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
   role              UserRole      @default(USER)
   budgets           Budget[]
   categories        Category[]
