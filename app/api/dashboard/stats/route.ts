@@ -15,72 +15,84 @@ export async function GET(request: Request) {
 
     const rates = await getExchangeRates();
 
-    const transactions = await prisma.transaction.findMany({
-      where: { userId },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        date: 'desc',
-      },
-    });
+    // ─── 1. Aggregate total income & expense per currency (jauh lebih efisien) ───
+    const [incomeAgg, expenseAgg] = await Promise.all([
+      prisma.transaction.groupBy({
+        by: ['currency'],
+        where: { userId, type: 'INCOME' },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.groupBy({
+        by: ['currency'],
+        where: { userId, type: 'EXPENSE' },
+        _sum: { amount: true },
+      }),
+    ]);
 
-    const savingsGoals = await prisma.savingsGoal.findMany({
-      where: { userId },
-      include: {
-        contributions: true,
-      },
-    });
-
-    const budgets = await prisma.budget.findMany({
-      where: { userId },
-      include: {
-        category: true,
-      },
-    });
-
-    // Summary calculations
-    let totalIncome = 0;
-    let totalExpense = 0;
-
-    transactions.forEach((tx: any) => {
-      const convertedAmount = convertCurrency(tx.amount, tx.currency, targetCurrency, rates);
-      if (tx.type === 'INCOME') {
-        totalIncome += convertedAmount;
-      } else {
-        totalExpense += convertedAmount;
-      }
-    });
-
-    const totalSavings = savingsGoals.reduce((sum: number, goal: any) => {
-      const convertedCurrent = convertCurrency(goal.currentAmount, goal.currency, targetCurrency, rates);
-      return sum + convertedCurrent;
+    const totalIncome = incomeAgg.reduce((sum, row) => {
+      return sum + convertCurrency(row._sum.amount ?? 0, row.currency, targetCurrency, rates);
     }, 0);
 
-    // Category breakdown (Expenses only)
-    const categoryBreakdown: { [name: string]: { amount: number; color: string } } = {};
-    transactions
-      .filter((tx: any) => tx.type === 'EXPENSE')
-      .forEach((tx: any) => {
-        const catName = tx.category.name;
-        const convertedAmount = convertCurrency(tx.amount, tx.currency, targetCurrency, rates);
-        if (!categoryBreakdown[catName]) {
-          categoryBreakdown[catName] = { amount: 0, color: tx.category.color };
-        }
-        categoryBreakdown[catName].amount += convertedAmount;
-      });
+    const totalExpense = expenseAgg.reduce((sum, row) => {
+      return sum + convertCurrency(row._sum.amount ?? 0, row.currency, targetCurrency, rates);
+    }, 0);
 
-    const categoryBreakdownArray = Object.entries(categoryBreakdown).map(([name, val]) => ({
+    // ─── 2. Total savings (aggregate per currency) ───
+    const savingsAgg = await prisma.savingsGoal.groupBy({
+      by: ['currency'],
+      where: { userId },
+      _sum: { currentAmount: true },
+    });
+
+    const totalSavings = savingsAgg.reduce((sum, row) => {
+      return sum + convertCurrency(row._sum.currentAmount ?? 0, row.currency, targetCurrency, rates);
+    }, 0);
+
+    // ─── 3. Category breakdown (expenses) — groupBy category ───
+    const categoryExpenses = await prisma.transaction.groupBy({
+      by: ['categoryId', 'currency'],
+      where: { userId, type: 'EXPENSE' },
+      _sum: { amount: true },
+    });
+
+    // Ambil info kategori yang dibutuhkan saja
+    const categoryIds = [...new Set(categoryExpenses.map((r) => r.categoryId))];
+    const categories = await prisma.category.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, name: true, color: true },
+    });
+    const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+    const breakdownMap: Record<string, { amount: number; color: string }> = {};
+    categoryExpenses.forEach((row) => {
+      const cat = categoryMap[row.categoryId];
+      if (!cat) return;
+      const converted = convertCurrency(row._sum.amount ?? 0, row.currency, targetCurrency, rates);
+      if (!breakdownMap[cat.name]) {
+        breakdownMap[cat.name] = { amount: 0, color: cat.color };
+      }
+      breakdownMap[cat.name].amount += converted;
+    });
+
+    const categoryBreakdown = Object.entries(breakdownMap).map(([name, val]) => ({
       name,
       value: val.amount,
       color: val.color,
     }));
 
-    // Monthly trends (Last 6 months)
-    const monthlyTrendsMap: { [monthStr: string]: { income: number; expenses: number } } = {};
-    transactions.forEach((tx: any) => {
-      const date = new Date(tx.date);
-      const monthStr = date.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+    // ─── 4. Monthly trends (last 6 months) — ambil data bulan yang perlu saja ───
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const trendTransactions = await prisma.transaction.findMany({
+      where: { userId, date: { gte: sixMonthsAgo } },
+      select: { amount: true, currency: true, type: true, date: true },
+      orderBy: { date: 'asc' },
+    });
+
+    const monthlyTrendsMap: Record<string, { income: number; expenses: number }> = {};
+    trendTransactions.forEach((tx) => {
+      const monthStr = new Date(tx.date).toLocaleString('en-US', { month: 'short', year: '2-digit' });
       const convertedAmount = convertCurrency(tx.amount, tx.currency, targetCurrency, rates);
       if (!monthlyTrendsMap[monthStr]) {
         monthlyTrendsMap[monthStr] = { income: 0, expenses: 0 };
@@ -93,23 +105,31 @@ export async function GET(request: Request) {
     });
 
     const monthlyTrends = Object.entries(monthlyTrendsMap)
-      .map(([name, val]) => ({
-        name,
-        income: val.income,
-        expenses: val.expenses,
-      }))
-      .reverse()
-      .slice(-6); // Only last 6 months
+      .map(([name, val]) => ({ name, ...val }))
+      .slice(-6);
 
-    // Convert recent transactions for display in target currency
-    const recentTransactionsConverted = transactions.slice(0, 5).map((tx: any) => ({
+    // ─── 5. Hanya ambil 5 transaksi terbaru dan 3 savings goals ───
+    const [recentTransactions, savingsGoals] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId },
+        include: { category: true },
+        orderBy: { date: 'desc' },
+        take: 5,
+      }),
+      prisma.savingsGoal.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+      }),
+    ]);
+
+    const recentTransactionsConverted = recentTransactions.map((tx) => ({
       ...tx,
       amount: convertCurrency(tx.amount, tx.currency, targetCurrency, rates),
       currency: targetCurrency,
     }));
 
-    // Convert savings goals for display in target currency
-    const savingsGoalsConverted = savingsGoals.slice(0, 3).map((goal: any) => ({
+    const savingsGoalsConverted = savingsGoals.map((goal) => ({
       ...goal,
       currentAmount: convertCurrency(goal.currentAmount, goal.currency, targetCurrency, rates),
       targetAmount: convertCurrency(goal.targetAmount, goal.currency, targetCurrency, rates),
@@ -123,15 +143,13 @@ export async function GET(request: Request) {
         netSavings: totalIncome - totalExpense,
         totalSavings,
       },
-      categoryBreakdown: categoryBreakdownArray,
+      categoryBreakdown,
       monthlyTrends,
       recentTransactions: recentTransactionsConverted,
       savingsGoals: savingsGoalsConverted,
-      budgets: budgets.slice(0, 3), // Budget formatting handles conversion differently based on category
     });
   } catch (error) {
     console.error('Failed to load dashboard stats:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-

@@ -7,17 +7,19 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  name         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  role         UserRole      @default(USER)
-  budgets      Budget[]
-  categories   Category[]
-  savingsGoals SavingsGoal[]
-  transactions Transaction[]
+  id                String        @id @default(uuid())
+  email             String        @unique
+  password          String
+  name              String
+  userName          String?
+  preferredCurrency String        @default("IDR")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  role              UserRole      @default(USER)
+  budgets           Budget[]
+  categories        Category[]
+  savingsGoals      SavingsGoal[]
+  transactions      Transaction[]
 }
 
 model Category {
