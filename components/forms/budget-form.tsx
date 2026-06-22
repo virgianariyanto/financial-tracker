@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { currencies } from '@/lib/currencies';
+import { useCurrency } from '@/components/currency-context';
 
 const formSchema = z.object({
   categoryId: z.string().uuid('Please select a category'),
@@ -31,17 +32,18 @@ interface BudgetFormProps {
 }
 
 export default function BudgetForm({ initialValues, defaultMonth, defaultYear, onSubmit, onCancel }: BudgetFormProps) {
+  const { defaultCurrency } = useCurrency();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: initialValues?.categoryId || '',
       amount: Number(initialValues?.amount) || 0,
-      currency: initialValues?.currency || 'IDR',
+      currency: initialValues?.currency || defaultCurrency || 'IDR',
       month: initialValues?.month || defaultMonth,
       year: initialValues?.year || defaultYear,
     },
@@ -57,6 +59,13 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
       setDisplayAmount(Number(initialValues.amount).toLocaleString('id-ID'));
     }
   }, [initialValues]);
+
+  useEffect(() => {
+    if (!initialValues?.currency) {
+      setValue('currency', defaultCurrency);
+    }
+  }, [initialValues, setValue, defaultCurrency]);
+
 
   useEffect(() => {
     async function fetchCategories() {
@@ -143,7 +152,12 @@ export default function BudgetForm({ initialValues, defaultMonth, defaultYear, o
         </div>
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-400">Currency</label>
-          <select {...register('currency')} className="w-full glass-input">
+          <input type="hidden" {...register('currency')} />
+          <select
+            value={watch('currency') || defaultCurrency}
+            disabled
+            className="w-full glass-input cursor-not-allowed opacity-70"
+          >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>
             ))}

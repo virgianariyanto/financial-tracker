@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency } from '@/lib/currencies';
 import { format } from 'date-fns';
+import { useCurrency } from '@/components/currency-context';
 
 interface StatSummary {
   totalIncome: number;
@@ -44,14 +45,15 @@ interface DashboardStats {
 }
 
 export default function DashboardClient() {
+  const { defaultCurrency } = useCurrency();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = async (currencyCode: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/dashboard/stats');
+      const res = await fetch(`/api/dashboard/stats?currency=${currencyCode}`);
       const data = await res.json();
       if (data && data.summary) {
         setStats(data);
@@ -64,7 +66,12 @@ export default function DashboardClient() {
   };
 
   useEffect(() => {
-    fetchStats();
+    if (defaultCurrency) {
+      fetchStats(defaultCurrency);
+    }
+  }, [defaultCurrency]);
+
+  useEffect(() => {
     async function fetchUser() {
       try {
         const res = await fetch('/api/auth/me');
@@ -78,6 +85,7 @@ export default function DashboardClient() {
     }
     fetchUser();
   }, []);
+
 
   if (loading) {
     return (
@@ -124,7 +132,7 @@ export default function DashboardClient() {
           </div>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Balance</p>
           <h3 className={`text-2xl font-bold mt-2 ${summary.netSavings >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {formatCurrency(summary.netSavings)}
+            {formatCurrency(summary.netSavings, defaultCurrency)}
           </h3>
           <p className="text-[10px] text-slate-500 mt-2">Cumulative cash balance</p>
         </div>
@@ -136,7 +144,7 @@ export default function DashboardClient() {
           </div>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Income</p>
           <h3 className="text-2xl font-bold text-slate-200 mt-2">
-            {formatCurrency(summary.totalIncome)}
+            {formatCurrency(summary.totalIncome, defaultCurrency)}
           </h3>
           <p className="text-[10px] text-blue-400 font-medium mt-2">All-time earnings registered</p>
         </div>
@@ -148,7 +156,7 @@ export default function DashboardClient() {
           </div>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Expenses</p>
           <h3 className="text-2xl font-bold text-slate-200 mt-2">
-            {formatCurrency(summary.totalExpense)}
+            {formatCurrency(summary.totalExpense, defaultCurrency)}
           </h3>
           <p className="text-[10px] text-red-400 font-medium mt-2">All-time cash outlays registered</p>
         </div>
@@ -160,7 +168,7 @@ export default function DashboardClient() {
           </div>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Savings Balance</p>
           <h3 className="text-2xl font-bold text-slate-200 mt-2">
-            {formatCurrency(summary.totalSavings)}
+            {formatCurrency(summary.totalSavings, defaultCurrency)}
           </h3>
           <p className="text-[10px] text-amber-400 font-medium mt-2">Secured in target goals</p>
         </div>
@@ -232,7 +240,7 @@ export default function DashboardClient() {
                   </ResponsiveContainer>
                   <div className="absolute text-center">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest">Outlays</span>
-                    <p className="text-base font-extrabold text-slate-200 mt-0.5">{formatCurrency(summary.totalExpense)}</p>
+                    <p className="text-base font-extrabold text-slate-200 mt-0.5">{formatCurrency(summary.totalExpense, defaultCurrency)}</p>
                   </div>
                 </div>
 
@@ -248,7 +256,7 @@ export default function DashboardClient() {
                         <span className="text-[10px] text-slate-500 font-semibold font-mono">
                           {summary.totalExpense > 0 ? ((entry.value / summary.totalExpense) * 100).toFixed(1) : 0}%
                         </span>
-                        <span className="font-semibold text-slate-200">{formatCurrency(entry.value)}</span>
+                        <span className="font-semibold text-slate-200">{formatCurrency(entry.value, defaultCurrency)}</span>
                       </div>
                     </div>
                   ))}

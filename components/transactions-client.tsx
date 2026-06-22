@@ -17,6 +17,7 @@ import Modal from '@/components/ui/modal';
 import TransactionForm from '@/components/forms/transaction-form';
 import { formatCurrency } from '@/lib/currencies';
 import { format } from 'date-fns';
+import { useCurrency } from '@/components/currency-context';
 
 interface Category {
   id: string;
@@ -38,7 +39,9 @@ interface Transaction {
 }
 
 export default function TransactionsClient() {
+  const { convert, defaultCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -326,7 +329,7 @@ export default function TransactionsClient() {
 
                       {/* Amount */}
                       <td className={`px-6 py-4.5 text-right font-bold text-base ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {isExpense ? '-' : '+'}{formatCurrency(tx.amount, tx.currency)}
+                        {isExpense ? '-' : '+'}{formatCurrency(convert(tx.amount, tx.currency), defaultCurrency)}
                       </td>
 
                       {/* Action buttons */}

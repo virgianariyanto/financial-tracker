@@ -19,6 +19,8 @@ import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import SavingsGoalForm from '@/components/forms/savings-goal-form';
 import SavingsContributionForm from '@/components/forms/savings-contribution-form';
+import { useCurrency } from '@/components/currency-context';
+import { formatCurrency as formatCurrencyLib } from '@/lib/currencies';
 
 interface SavingsGoal {
   id: string;
@@ -46,6 +48,7 @@ interface FullSavingsGoal extends SavingsGoal {
 }
 
 export default function SavingsClient() {
+  const { defaultCurrency } = useCurrency();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
@@ -62,7 +65,7 @@ export default function SavingsClient() {
   const fetchGoals = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/savings');
+      const res = await fetch(`/api/savings?currency=${defaultCurrency}`);
       const data = await res.json();
       setGoals(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -73,8 +76,14 @@ export default function SavingsClient() {
   };
 
   useEffect(() => {
-    fetchGoals();
-  }, []);
+    if (defaultCurrency) {
+      fetchGoals();
+      if (selectedGoal) {
+        handleOpenDetail(selectedGoal);
+      }
+    }
+  }, [defaultCurrency, selectedGoal?.id]);
+
 
   const handleAddOrEditGoal = async (payload: any) => {
     try {
@@ -129,7 +138,7 @@ export default function SavingsClient() {
     setIsDetailModalOpen(true);
     setLoadingDetail(true);
     try {
-      const res = await fetch(`/api/savings/${goal.id}`);
+      const res = await fetch(`/api/savings/${goal.id}?currency=${defaultCurrency}`);
       const data = await res.json();
       setSelectedGoal(data);
     } catch (err) {
@@ -183,13 +192,8 @@ export default function SavingsClient() {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
+  const formatCurrency = (amount: number, currency: string = defaultCurrency) => {
+    return formatCurrencyLib(amount, currency);
   };
 
   return (

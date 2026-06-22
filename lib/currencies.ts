@@ -29,3 +29,26 @@ export function formatCurrency(amount: number, currencyCode: string = DEFAULT_CU
     return `${currency.symbol}${amount.toLocaleString()}`;
   }
 }
+
+export function convertCurrency(
+  amount: number,
+  from: string,
+  to: string,
+  rates: Record<string, number>
+): number {
+  if (from === to) return amount;
+  
+  const fromCode = from.toUpperCase();
+  const toCode = to.toUpperCase();
+  
+  const fromRate = rates[fromCode];
+  const toRate = rates[toCode];
+  
+  if (fromRate === undefined || toRate === undefined) {
+    return amount;
+  }
+  
+  const amountInUSD = amount / fromRate;
+  return amountInUSD * toRate;
+}
+

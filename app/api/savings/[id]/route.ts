@@ -13,8 +13,10 @@ const updateGoalSchema = z.object({
   color: z.string().min(3).optional(),
 });
 
+import { getExchangeRates, convertCurrency } from '@/lib/rates';
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -23,6 +25,11 @@ export async function GET(
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const targetCurrency = (searchParams.get('currency') || 'IDR').toUpperCase();
+
+    const rates = await getExchangeRates();
 
     const goal = await prisma.savingsGoal.findUnique({
       where: { id },
@@ -39,7 +46,20 @@ export async function GET(
       return NextResponse.json({ error: 'Savings goal not found' }, { status: 404 });
     }
 
-    return NextResponse.json(goal);
+    // Convert the goal fields
+    const originalCurrency = goal.currency;
+    const convertedGoal = {
+      ...goal,
+      currentAmount: convertCurrency(goal.currentAmount, originalCurrency, targetCurrency, rates),
+      targetAmount: convertCurrency(goal.targetAmount, originalCurrency, targetCurrency, rates),
+      currency: targetCurrency,
+      contributions: goal.contributions.map((c: any) => ({
+        ...c,
+        amount: convertCurrency(c.amount, originalCurrency, targetCurrency, rates),
+      })),
+    };
+
+    return NextResponse.json(convertedGoal);
   } catch (error) {
     console.error('Failed to fetch savings goal:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

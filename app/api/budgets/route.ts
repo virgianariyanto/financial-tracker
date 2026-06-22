@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
 import { getAuthUserId } from '@/lib/auth';
+import { getExchangeRates, convertCurrency } from '@/lib/rates';
 
 const budgetSchema = z.object({
   categoryId: z.string().uuid(),
@@ -23,9 +24,12 @@ export async function GET(request: Request) {
     const now = new Date();
     const month = parseInt(searchParams.get('month') || String(now.getMonth() + 1), 10);
     const year = parseInt(searchParams.get('year') || String(now.getFullYear()), 10);
+    const targetCurrency = (searchParams.get('currency') || 'IDR').toUpperCase();
 
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const rates = await getExchangeRates();
 
     // 1. Fetch all expense categories
     const categories = await prisma.category.findMany({
@@ -49,9 +53,8 @@ export async function GET(request: Request) {
       },
     });
 
-    // 3. Aggregate transactions by category for this period and user
-    const transactionsGrouped = await prisma.transaction.groupBy({
-      by: ['categoryId'],
+    // 3. Fetch all expense transactions for this period and user
+    const transactions = await prisma.transaction.findMany({
       where: {
         userId,
         type: 'EXPENSE',
@@ -60,16 +63,22 @@ export async function GET(request: Request) {
           lte: endDate,
         },
       },
-      _sum: {
-        amount: true,
-      },
     });
 
     // Map together
     const results = categories.map((category: any) => {
       const budget = budgets.find((b: any) => b.categoryId === category.id) || null;
-      const txSum = transactionsGrouped.find((t: any) => t.categoryId === category.id);
-      const actual = txSum?._sum.amount || 0;
+      
+      // Calculate actual expenses for this category, converting each transaction to the target currency
+      const catTransactions = transactions.filter((t: any) => t.categoryId === category.id);
+      const actual = catTransactions.reduce((sum: number, tx: any) => {
+        return sum + convertCurrency(tx.amount, tx.currency, targetCurrency, rates);
+      }, 0);
+
+      // Convert the budget limit amount to the target currency
+      const limitAmount = budget 
+        ? convertCurrency(budget.amount, budget.currency, targetCurrency, rates)
+        : 0;
 
       return {
         id: budget?.id || null,
@@ -77,8 +86,8 @@ export async function GET(request: Request) {
         categoryName: category.name,
         categoryIcon: category.icon,
         categoryColor: category.color,
-        amount: budget?.amount || 0,
-        currency: budget?.currency || 'IDR',
+        amount: limitAmount,
+        currency: targetCurrency,
         actual,
       };
     });

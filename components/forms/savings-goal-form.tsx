@@ -3,10 +3,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { currencies } from '@/lib/currencies';
+import { useCurrency } from '@/components/currency-context';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Goal name is required').max(100),
@@ -38,6 +39,7 @@ interface SavingsGoalFormProps {
 }
 
 export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: SavingsGoalFormProps) {
+  const { defaultCurrency } = useCurrency();
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
@@ -46,7 +48,7 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
     defaultValues: {
       name: initialValues?.name || '',
       targetAmount: Number(initialValues?.targetAmount) || 0,
-      currency: initialValues?.currency || 'IDR',
+      currency: initialValues?.currency || defaultCurrency || 'IDR',
       deadline: initialValues?.deadline ? new Date(initialValues.deadline).toISOString().split('T')[0] : '',
       icon: initialValues?.icon || 'PiggyBank',
       color: initialValues?.color || '#10b981',
@@ -57,6 +59,13 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
     const amt = Number(initialValues?.targetAmount);
     return amt ? amt.toLocaleString('id-ID') : '';
   });
+
+  useEffect(() => {
+    if (!initialValues?.currency) {
+      setValue('currency', defaultCurrency);
+    }
+  }, [initialValues, setValue, defaultCurrency]);
+
 
   const selectedColor = watch('color');
   const selectedIcon = watch('icon');
@@ -120,7 +129,12 @@ export default function SavingsGoalForm({ initialValues, onSubmit, onCancel }: S
         </div>
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-400 font-medium">Currency</label>
-          <select {...register('currency')} className="w-full glass-input">
+          <input type="hidden" {...register('currency')} />
+          <select
+            value={watch('currency') || defaultCurrency}
+            disabled
+            className="w-full glass-input cursor-not-allowed opacity-70"
+          >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>
             ))}

@@ -16,6 +16,8 @@ import {
 import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import BudgetForm from '@/components/forms/budget-form';
+import { useCurrency } from '@/components/currency-context';
+import { formatCurrency as formatCurrencyLib } from '@/lib/currencies';
 
 interface CategoryBudget {
   id: string | null;
@@ -29,6 +31,7 @@ interface CategoryBudget {
 }
 
 export default function BudgetsClient() {
+  const { defaultCurrency } = useCurrency();
   const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +44,7 @@ export default function BudgetsClient() {
   const fetchBudgets = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/budgets?month=${selectedMonth}&year=${selectedYear}`);
+      const res = await fetch(`/api/budgets?month=${selectedMonth}&year=${selectedYear}&currency=${defaultCurrency}`);
       const data = await res.json();
       setBudgets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -52,8 +55,11 @@ export default function BudgetsClient() {
   };
 
   useEffect(() => {
-    fetchBudgets();
-  }, [selectedMonth, selectedYear]);
+    if (defaultCurrency) {
+      fetchBudgets();
+    }
+  }, [selectedMonth, selectedYear, defaultCurrency]);
+
 
   const handlePrevMonth = () => {
     if (selectedMonth === 1) {
@@ -131,13 +137,8 @@ export default function BudgetsClient() {
     return d.toLocaleString('en-US', { month: 'long' });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
+  const formatCurrency = (amount: number, currency: string = defaultCurrency) => {
+    return formatCurrencyLib(amount, currency);
   };
 
   // Aggregated Summary values
@@ -198,18 +199,18 @@ export default function BudgetsClient() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="glass-panel p-4 rounded-xl">
             <p className="text-[10px] text-slate-500 uppercase font-semibold">Total Budgeted</p>
-            <p className="text-base font-bold text-slate-300 mt-1">{formatCurrency(totalBudgeted, 'IDR')}</p>
+            <p className="text-base font-bold text-slate-300 mt-1">{formatCurrency(totalBudgeted, defaultCurrency)}</p>
           </div>
           <div className="glass-panel p-4 rounded-xl">
             <p className="text-[10px] text-slate-500 uppercase font-semibold">Total Outflow</p>
-            <p className="text-base font-bold text-slate-200 mt-1">{formatCurrency(totalActual, 'IDR')}</p>
+            <p className="text-base font-bold text-slate-200 mt-1">{formatCurrency(totalActual, defaultCurrency)}</p>
           </div>
           <div className="glass-panel p-4 rounded-xl">
             <p className="text-[10px] text-slate-500 uppercase font-semibold">Status</p>
             <p className={`text-base font-bold mt-1 ${totalActual > totalBudgeted ? 'text-red-400' : 'text-emerald-400'}`}>
               {totalActual > totalBudgeted
-                ? `Over limit by ${formatCurrency(totalActual - totalBudgeted, 'IDR')}`
-                : `${formatCurrency(totalBudgeted - totalActual, 'IDR')} remaining`
+                ? `Over limit by ${formatCurrency(totalActual - totalBudgeted, defaultCurrency)}`
+                : `${formatCurrency(totalBudgeted - totalActual, defaultCurrency)} remaining`
               }
             </p>
           </div>

@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Track your personal and family expenses, savings goals, and budgets seamlessly.",
 };
 
+import { CurrencyProvider } from "@/components/currency-context";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -50,8 +52,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex text-slate-200 bg-background" suppressHydrationWarning>
-        <AppShell>{children}</AppShell>
+        <CurrencyProvider>
+          <AppShell>{children}</AppShell>
+        </CurrencyProvider>
       </body>
     </html>
   );
 }
+

@@ -3,28 +3,32 @@
 import { useEffect, useState } from 'react';
 import { Save, RefreshCw, CheckCircle, User, DollarSign, RotateCcw } from 'lucide-react';
 import { currencies } from '@/lib/currencies';
+import { useCurrency } from '@/components/currency-context';
 
 export default function SettingsClient() {
+  const { defaultCurrency: globalCurrency, updateDefaultCurrency } = useCurrency();
   const [userName, setUserName] = useState('');
-  const [defaultCurrency, setDefaultCurrency] = useState('IDR');
+  const [defaultCurrency, setDefaultCurrency] = useState(globalCurrency);
   const [saved, setSaved] = useState(false);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedName = localStorage.getItem('fintrack_user_name');
-      const storedCurrency = localStorage.getItem('fintrack_default_currency');
       setUserName(storedName || 'Personal Workspace');
-      setDefaultCurrency(storedCurrency || 'IDR');
     }
   }, []);
+
+  useEffect(() => {
+    setDefaultCurrency(globalCurrency);
+  }, [globalCurrency]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
       localStorage.setItem('fintrack_user_name', userName.trim());
-      localStorage.setItem('fintrack_default_currency', defaultCurrency);
     }
+    updateDefaultCurrency(defaultCurrency);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -35,8 +39,8 @@ export default function SettingsClient() {
       setDefaultCurrency('IDR');
       if (typeof window !== 'undefined') {
         localStorage.setItem('fintrack_user_name', 'Personal Workspace');
-        localStorage.setItem('fintrack_default_currency', 'IDR');
       }
+      updateDefaultCurrency('IDR');
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
