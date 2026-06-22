@@ -14,6 +14,8 @@ import {
 import * as Icons from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import CategoryForm from '@/components/forms/category-form';
+import { useToast } from '@/components/toast-context';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface Category {
   id: string;
@@ -29,6 +31,8 @@ interface Category {
 }
 
 export default function CategoriesClient() {
+  const { showToast } = useToast();
+  const showConfirm = useConfirm();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +71,7 @@ export default function CategoriesClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to update category');
         }
+        showToast('Category updated successfully!', 'success');
       } else {
         const res = await fetch('/api/categories', {
           method: 'POST',
@@ -77,29 +82,41 @@ export default function CategoriesClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to create category');
         }
+        showToast('Category created successfully!', 'success');
       }
       setIsModalOpen(false);
       setEditingCategory(null);
       fetchCategories();
     } catch (err: any) {
+      showToast(err.message || 'Failed to save category.', 'error');
       throw err; // Re-throw so the form can display it
     }
   };
 
   const handleDelete = async (id: string) => {
     setDeleteError('');
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    const ok = await showConfirm({
+      title: 'Delete Category',
+      message: 'Are you sure you want to delete this category? Transactions linked to it may be affected.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errData = await res.json();
         setDeleteError(errData.error || 'Failed to delete category');
+        showToast(errData.error || 'Failed to delete category.', 'error');
         return;
       }
       fetchCategories();
+      showToast('Category deleted.', 'info');
     } catch (err) {
       console.error('Failed to delete category', err);
       setDeleteError('Network error while deleting');
+      showToast('A network error occurred.', 'error');
     }
   };
 

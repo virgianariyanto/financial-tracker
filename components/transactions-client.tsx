@@ -20,6 +20,8 @@ import TransactionForm from '@/components/forms/transaction-form';
 import { formatCurrency } from '@/lib/currencies';
 import { format } from 'date-fns';
 import { useCurrency } from '@/components/currency-context';
+import { useToast } from '@/components/toast-context';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface Category {
   id: string;
@@ -42,6 +44,8 @@ interface Transaction {
 
 export default function TransactionsClient() {
   const { convert, defaultCurrency } = useCurrency();
+  const { showToast } = useToast();
+  const showConfirm = useConfirm();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -126,6 +130,9 @@ export default function TransactionsClient() {
           setIsModalOpen(false);
           setEditingTransaction(null);
           fetchTransactions();
+          showToast('Transaction updated successfully!', 'success');
+        } else {
+          showToast('Failed to update transaction.', 'error');
         }
       } else {
         const res = await fetch('/api/transactions', {
@@ -136,24 +143,39 @@ export default function TransactionsClient() {
         if (res.ok) {
           setIsModalOpen(false);
           fetchTransactions();
+          showToast('Transaction added successfully!', 'success');
+        } else {
+          showToast('Failed to add transaction.', 'error');
         }
       }
     } catch (err) {
       console.error('Failed to save transaction', err);
+      showToast('A network error occurred.', 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
+    const ok = await showConfirm({
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/transactions/${id}`, {
         method: 'DELETE',
       });
       if (res.ok) {
         fetchTransactions();
+        showToast('Transaction deleted.', 'info');
+      } else {
+        showToast('Failed to delete transaction.', 'error');
       }
     } catch (err) {
       console.error('Failed to delete transaction', err);
+      showToast('A network error occurred.', 'error');
     }
   };
 

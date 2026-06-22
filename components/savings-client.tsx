@@ -21,6 +21,8 @@ import SavingsGoalForm from '@/components/forms/savings-goal-form';
 import SavingsContributionForm from '@/components/forms/savings-contribution-form';
 import { useCurrency } from '@/components/currency-context';
 import { formatCurrency as formatCurrencyLib } from '@/lib/currencies';
+import { useToast } from '@/components/toast-context';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface SavingsGoal {
   id: string;
@@ -49,6 +51,8 @@ interface FullSavingsGoal extends SavingsGoal {
 
 export default function SavingsClient() {
   const { defaultCurrency } = useCurrency();
+  const { showToast } = useToast();
+  const showConfirm = useConfirm();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
@@ -97,6 +101,7 @@ export default function SavingsClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to update savings goal');
         }
+        showToast('Savings goal updated!', 'success');
       } else {
         const res = await fetch('/api/savings', {
           method: 'POST',
@@ -107,30 +112,42 @@ export default function SavingsClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to create savings goal');
         }
+        showToast('Savings goal created!', 'success');
       }
       setIsGoalModalOpen(false);
       setEditingGoal(null);
       fetchGoals();
     } catch (err: any) {
+      showToast(err.message || 'Failed to save goal.', 'error');
       throw err;
     }
   };
 
   const handleDeleteGoal = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this savings goal? This will also delete all contribution logs.')) return;
+    const ok = await showConfirm({
+      title: 'Delete Savings Goal',
+      message: 'Are you sure you want to delete this savings goal? This will also delete all contribution logs.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/savings/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errData = await res.json();
         setError(errData.error || 'Failed to delete goal');
+        showToast(errData.error || 'Failed to delete goal.', 'error');
         return;
       }
       setIsDetailModalOpen(false);
       setSelectedGoal(null);
       fetchGoals();
+      showToast('Savings goal deleted.', 'info');
     } catch (err) {
       console.error('Failed to delete goal', err);
       setError('Network error while deleting goal');
+      showToast('A network error occurred.', 'error');
     }
   };
 
@@ -163,17 +180,26 @@ export default function SavingsClient() {
       setIsContributionModalOpen(false);
       setActiveGoalForContribution(null);
       fetchGoals();
+      showToast('Contribution added!', 'success');
       // If detail modal is currently open, reload it too
       if (selectedGoal && selectedGoal.id === activeGoalForContribution.id) {
         handleOpenDetail(selectedGoal);
       }
     } catch (err: any) {
+      showToast(err.message || 'Failed to add contribution.', 'error');
       throw err;
     }
   };
 
   const handleDeleteContribution = async (contributionId: string) => {
-    if (!confirm('Are you sure you want to delete this contribution?')) return;
+    const ok = await showConfirm({
+      title: 'Remove Contribution',
+      message: 'Are you sure you want to remove this contribution entry?',
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+      variant: 'warning',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/savings/contributions/${contributionId}`, {
         method: 'DELETE',
@@ -181,8 +207,10 @@ export default function SavingsClient() {
       if (!res.ok) {
         const errData = await res.json();
         alert(errData.error || 'Failed to delete contribution');
+        showToast(errData.error || 'Failed to delete contribution.', 'error');
         return;
       }
+      showToast('Contribution removed.', 'info');
       if (selectedGoal) {
         handleOpenDetail(selectedGoal);
       }

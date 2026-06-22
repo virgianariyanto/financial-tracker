@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { Save, RefreshCw, CheckCircle, User, DollarSign, RotateCcw, AlertCircle, KeyRound, Lock } from 'lucide-react';
 import { currencies } from '@/lib/currencies';
 import { useCurrency } from '@/components/currency-context';
+import { useConfirm } from '@/components/confirm-dialog';
 
 export default function SettingsClient() {
   const { defaultCurrency: globalCurrency, updateDefaultCurrency } = useCurrency();
+  const showConfirm = useConfirm();
   const [userName, setUserName] = useState('');
   const [name, setName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -77,7 +79,14 @@ export default function SettingsClient() {
   };
 
   const handleReset = async () => {
-    if (!confirm('Are you sure you want to reset preferences to default?')) return;
+    const ok = await showConfirm({
+      title: 'Reset Preferences',
+      message: 'Are you sure you want to reset all preferences to their default values? This cannot be undone.',
+      confirmLabel: 'Reset',
+      cancelLabel: 'Cancel',
+      variant: 'warning',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const res = await fetch('/api/user/profile', {
@@ -161,7 +170,7 @@ export default function SettingsClient() {
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             className="w-full glass-input"
-            placeholder="e.g. Keuangan Pribadi"
+            placeholder="e.g. Family budget"
           />
           <p className="text-[10px] text-slate-500">
             Alternative name to display on the dashboard.

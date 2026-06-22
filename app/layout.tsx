@@ -19,6 +19,9 @@ export const metadata: Metadata = {
 };
 
 import { CurrencyProvider } from "@/components/currency-context";
+import { ToastProvider } from "@/components/toast-context";
+import { ConfirmProvider } from "@/components/confirm-dialog";
+import ToastContainer from "@/components/ui/toast-container";
 
 export default function RootLayout({
   children,
@@ -53,7 +56,12 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex text-slate-200 bg-background" suppressHydrationWarning>
         <CurrencyProvider>
-          <AppShell>{children}</AppShell>
+          <ToastProvider>
+            <ConfirmProvider>
+              <AppShell>{children}</AppShell>
+              <ToastContainer />
+            </ConfirmProvider>
+          </ToastProvider>
         </CurrencyProvider>
       </body>
     </html>

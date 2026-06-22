@@ -48,6 +48,26 @@
   --color-slate-700: #334155;
   --color-slate-800: #1e293b;
   --color-slate-900: #0f172a;
+
+  /* Toast variables — Dark Mode */
+  --toast-bg:         rgba(15, 18, 29, 0.95); /* Same as modal-bg for elegance */
+  --toast-border:     rgba(255, 255, 255, 0.09);
+  --toast-text:       #e2e8f0;
+  --toast-close:      rgba(148, 163, 184, 0.7);
+  --toast-close-hover: rgba(226, 232, 240, 0.9);
+  --toast-close-hover-bg: rgba(255, 255, 255, 0.06);
+
+  /* Confirm Dialog variables — Dark Mode */
+  --confirm-bg:         #14171e;
+  --confirm-border:     rgba(255, 255, 255, 0.10);
+  --confirm-title:      #f1f5f9;
+  --confirm-message:    #94a3b8;
+  --confirm-divider:    rgba(255, 255, 255, 0.06);
+  --confirm-cancel-border: rgba(255, 255, 255, 0.08);
+  --confirm-cancel-text: #94a3b8;
+  --confirm-cancel-hover-text: #e2e8f0;
+  --confirm-cancel-hover-bg: rgba(255, 255, 255, 0.05);
+  --confirm-inner-glow: rgba(255, 255, 255, 0.018);
 }
 
 .light {
@@ -85,6 +105,26 @@
   --color-slate-700: #e2e8f0;
   --color-slate-800: #f1f5f9;
   --color-slate-900: #f8fafc;
+
+  /* Toast variables — Light Mode */
+  --toast-bg:         rgba(255, 255, 255, 0.98); /* Same as modal-bg for elegance */
+  --toast-border:     rgba(15, 23, 42, 0.08);
+  --toast-text:       #1e293b;
+  --toast-close:      rgba(71, 85, 105, 0.7);
+  --toast-close-hover: rgba(15, 23, 42, 0.9);
+  --toast-close-hover-bg: rgba(15, 23, 42, 0.05);
+
+  /* Confirm Dialog variables — Light Mode */
+  --confirm-bg:         #ffffff;
+  --confirm-border:     rgba(15, 23, 42, 0.09);
+  --confirm-title:      #0f172a;
+  --confirm-message:    #475569;
+  --confirm-divider:    rgba(15, 23, 42, 0.07);
+  --confirm-cancel-border: rgba(15, 23, 42, 0.10);
+  --confirm-cancel-text: #64748b;
+  --confirm-cancel-hover-text: #0f172a;
+  --confirm-cancel-hover-bg: rgba(15, 23, 42, 0.04);
+  --confirm-inner-glow: rgba(15, 23, 42, 0.01);
 }
 
 @theme inline {

@@ -18,6 +18,8 @@ import Modal from '@/components/ui/modal';
 import BudgetForm from '@/components/forms/budget-form';
 import { useCurrency } from '@/components/currency-context';
 import { formatCurrency as formatCurrencyLib } from '@/lib/currencies';
+import { useToast } from '@/components/toast-context';
+import { useConfirm } from '@/components/confirm-dialog';
 
 interface CategoryBudget {
   id: string | null;
@@ -32,6 +34,8 @@ interface CategoryBudget {
 
 export default function BudgetsClient() {
   const { defaultCurrency } = useCurrency();
+  const { showToast } = useToast();
+  const showConfirm = useConfirm();
   const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,6 +99,7 @@ export default function BudgetsClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to update budget');
         }
+        showToast('Budget updated successfully!', 'success');
       } else {
         // POST / Upsert
         const res = await fetch('/api/budgets', {
@@ -106,28 +111,40 @@ export default function BudgetsClient() {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to set budget');
         }
+        showToast('Budget set successfully!', 'success');
       }
       setIsModalOpen(false);
       setEditingBudget(null);
       fetchBudgets();
     } catch (err: any) {
+      showToast(err.message || 'Failed to save budget.', 'error');
       throw err;
     }
   };
 
   const handleDeleteBudget = async (id: string) => {
-    if (!confirm('Are you sure you want to remove the budget limit for this category?')) return;
+    const ok = await showConfirm({
+      title: 'Remove Budget Limit',
+      message: 'Are you sure you want to remove the budget limit for this category?',
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+      variant: 'warning',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/budgets/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errData = await res.json();
         setError(errData.error || 'Failed to delete budget limit');
+        showToast(errData.error || 'Failed to delete budget limit.', 'error');
         return;
       }
       fetchBudgets();
+      showToast('Budget limit removed.', 'info');
     } catch (err) {
       console.error(err);
       setError('Network error while deleting budget limit');
+      showToast('A network error occurred.', 'error');
     }
   };
 

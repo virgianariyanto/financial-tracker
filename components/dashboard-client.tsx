@@ -65,7 +65,7 @@ export default function DashboardClient() {
       if (statsData && statsData.summary) {
         setStats(statsData);
       }
-      
+
       if (Array.isArray(budgetsData)) {
         // Find budgets >= 80%
         const warnings = budgetsData.filter(b => b.id && b.amount > 0 && (b.actual / b.amount) >= 0.8);
@@ -145,15 +145,13 @@ export default function DashboardClient() {
             return (
               <div
                 key={idx}
-                className={`glass-panel rounded-2xl p-4 flex items-center gap-4 ${
-                  isExceeded
+                className={`glass-panel rounded-2xl p-4 flex items-center gap-4 ${isExceeded
                     ? 'border-red-500/30 bg-red-500/10'
                     : 'border-amber-500/30 bg-amber-500/10'
-                } animate-fade-in`}
+                  } animate-fade-in`}
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
-                  isExceeded ? 'bg-red-500/20' : 'bg-amber-500/20'
-                }`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${isExceeded ? 'bg-red-500/20' : 'bg-amber-500/20'
+                  }`}>
                   <AlertTriangle className={`h-5 w-5 ${isExceeded ? 'text-red-400' : 'text-amber-400'}`} />
                 </div>
                 <div className="flex-1">
@@ -166,7 +164,7 @@ export default function DashboardClient() {
                 </div>
                 <Link
                   href="/budgets"
-                  className="hidden sm:flex px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+                  className="hidden sm:flex px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors"
                 >
                   View Budget
                 </Link>
