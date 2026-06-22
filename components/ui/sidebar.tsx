@@ -128,7 +128,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
                   pathname.startsWith('/admin') ? 'text-white' : 'text-amber-400'
                 )} />
-                Management User
+                User Management
               </Link>
             </div>
           )}

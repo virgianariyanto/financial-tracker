@@ -59,7 +59,7 @@ export default function SettingsClient() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Gagal menyimpan pengaturan.');
+        setError(data.error || 'Failed to save settings.');
         return;
       }
 
@@ -70,14 +70,14 @@ export default function SettingsClient() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError('Terjadi kesalahan. Coba lagi.');
+      setError('An error occurred. Try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm('Yakin ingin mereset preferensi ke default?')) return;
+    if (!confirm('Are you sure you want to reset preferences to default?')) return;
     setSaving(true);
     try {
       const res = await fetch('/api/user/profile', {
@@ -96,7 +96,7 @@ export default function SettingsClient() {
         setTimeout(() => setSaved(false), 3000);
       }
     } catch (err) {
-      setError('Gagal mereset preferensi.');
+      setError('Failed to reset preferences.');
     } finally {
       setSaving(false);
     }
@@ -106,7 +106,7 @@ export default function SettingsClient() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <RefreshCw className="h-7 w-7 text-emerald-400 animate-spin" />
-        <p className="text-sm text-slate-400">Memuat pengaturan...</p>
+        <p className="text-sm text-slate-400">Loading settings...</p>
       </div>
     );
   }
@@ -116,14 +116,14 @@ export default function SettingsClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-emerald-500 font-sans">Settings</h1>
         <p className="text-slate-400 text-sm">
-          Preferensi tersimpan ke database dan berlaku di semua perangkat.
+          Preferences are saved to the database and applied across all devices.
         </p>
       </div>
 
       {saved && (
         <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 animate-fade-in">
           <CheckCircle className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-          <p className="text-xs text-emerald-400 font-medium">Pengaturan berhasil disimpan!</p>
+          <p className="text-xs text-emerald-400 font-medium">Settings saved successfully!</p>
         </div>
       )}
 
@@ -138,7 +138,7 @@ export default function SettingsClient() {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-400 flex items-center gap-2">
             <User className="h-4 w-4 text-slate-500" />
-            Nama Lengkap
+            Full Name
           </label>
           <input
             type="text"
@@ -154,7 +154,7 @@ export default function SettingsClient() {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-400 flex items-center gap-2">
             <User className="h-4 w-4 text-slate-500" />
-            Nama Workspace (Opsional)
+            Workspace Name (Optional)
           </label>
           <input
             type="text"
@@ -164,7 +164,7 @@ export default function SettingsClient() {
             placeholder="e.g. Keuangan Pribadi"
           />
           <p className="text-[10px] text-slate-500">
-            Nama alternatif untuk ditampilkan di dashboard.
+            Alternative name to display on the dashboard.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function SettingsClient() {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-400 flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-slate-500" />
-            Mata Uang Default
+            Default Currency
           </label>
           <select
             value={defaultCurrency}
@@ -186,37 +186,37 @@ export default function SettingsClient() {
             ))}
           </select>
           <p className="text-[10px] text-slate-500">
-            Menentukan mata uang default untuk transaksi, budget, dan savings goals baru.
+            Determines the default currency for new transactions, budgets, and savings goals.
           </p>
         </div>
 
         {/* Change Password */}
         <div className="pt-4 border-t border-white/5 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-300">Ubah Password</h3>
+          <h3 className="text-sm font-semibold text-slate-300">Change Password</h3>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-2">
               <Lock className="h-4 w-4 text-slate-500" />
-              Password Saat Ini
+              Current Password
             </label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               className="w-full glass-input"
-              placeholder="Masukkan password saat ini"
+              placeholder="Enter current password"
             />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-2">
               <KeyRound className="h-4 w-4 text-slate-500" />
-              Password Baru
+              New Password
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full glass-input"
-              placeholder="Minimal 6 karakter"
+              placeholder="Minimum 6 characters"
             />
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function SettingsClient() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
+            {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
       </form>

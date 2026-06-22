@@ -110,15 +110,15 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        showNotification('error', data.error || 'Gagal menambahkan user');
+        showNotification('error', data.error || 'Failed to add user');
       } else {
-        showNotification('success', 'User berhasil ditambahkan!');
+        showNotification('success', 'User added successfully!');
         setIsCreateOpen(false);
         resetForm();
         fetchUsers();
       }
     } catch (error) {
-      showNotification('error', 'Terjadi kesalahan sistem.');
+      showNotification('error', 'A system error occurred.');
     } finally {
       setSubmitting(false);
     }
@@ -142,15 +142,15 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        showNotification('error', data.error || 'Gagal memperbarui user');
+        showNotification('error', data.error || 'Failed to update user');
       } else {
-        showNotification('success', 'User berhasil diperbarui!');
+        showNotification('success', 'User updated successfully!');
         setIsEditOpen(false);
         resetForm();
         fetchUsers();
       }
     } catch (error) {
-      showNotification('error', 'Terjadi kesalahan sistem.');
+      showNotification('error', 'A system error occurred.');
     } finally {
       setSubmitting(false);
     }
@@ -167,15 +167,15 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        showNotification('error', data.error || 'Gagal menghapus user');
+        showNotification('error', data.error || 'Failed to delete user');
       } else {
-        showNotification('success', 'User berhasil dihapus!');
+        showNotification('success', 'User deleted successfully!');
         setIsDeleteOpen(false);
         setSelectedUser(null);
         fetchUsers();
       }
     } catch (error) {
-      showNotification('error', 'Terjadi kesalahan sistem.');
+      showNotification('error', 'A system error occurred.');
     } finally {
       setSubmitting(false);
     }
@@ -237,8 +237,8 @@ export default function AdminPage() {
             <Shield className="h-6 w-6 text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-emerald-400">Management User</h1>
-            <p className="text-sm text-slate-400">Kelola data dan hak akses pengguna sistem Finora</p>
+            <h1 className="text-2xl font-bold tracking-tight text-emerald-400">User Management</h1>
+            <p className="text-sm text-slate-400">Manage data and access rights for Finora users</p>
           </div>
         </div>
         
@@ -247,7 +247,7 @@ export default function AdminPage() {
           className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-all duration-200 shadow-md shadow-emerald-500/10 outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
-          Tambah User
+          Add User
         </button>
       </div>
 
@@ -258,7 +258,7 @@ export default function AdminPage() {
             <Users className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">Total Pengguna</p>
+            <p className="text-xs text-slate-400 font-medium">Total Users</p>
             <p className="text-2xl font-bold text-slate-100">{users.length}</p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export default function AdminPage() {
             <UserCheck className="h-5 w-5 text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">User Biasa</p>
+            <p className="text-xs text-slate-400 font-medium">Regular User</p>
             <p className="text-2xl font-bold text-slate-100">{totalUsers}</p>
           </div>
         </div>
@@ -285,12 +285,12 @@ export default function AdminPage() {
       {/* Users Table */}
       <div className="glass-panel rounded-2xl overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-slate-100">Daftar Pengguna</h2>
+          <h2 className="text-base font-semibold text-slate-100">User List</h2>
           <div className="relative w-full sm:w-72">
             <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari nama atau email..."
+              placeholder="Search name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-4 pr-10 py-2.5 glass-input text-sm"
@@ -301,23 +301,23 @@ export default function AdminPage() {
         {loading ? (
           <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
             <div className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <span className="text-sm">Memuat data pengguna...</span>
+            <span className="text-sm">Loading user data...</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
             <UserX className="h-10 w-10 opacity-40" />
-            <p className="text-sm">Tidak ada pengguna ditemukan.</p>
+            <p className="text-sm">No users found.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <th className="px-6 py-4">Pengguna</th>
+                  <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Bergabung</th>
-                  <th className="px-6 py-4 text-right">Aksi</th>
+                  <th className="px-6 py-4">Joined</th>
+                  <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
@@ -366,7 +366,7 @@ export default function AdminPage() {
                           onClick={() => openDeleteModal(user)}
                           disabled={user.id === currentAdminId}
                           className="p-1.5 rounded-lg border border-white/5 hover:bg-red-500/10 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:text-red-400 transition-colors cursor-pointer"
-                          title={user.id === currentAdminId ? "Anda tidak dapat menghapus akun Anda sendiri" : "Hapus User"}
+                          title={user.id === currentAdminId ? "You cannot delete your own account" : "Delete User"}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -385,7 +385,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-white/8">
-              <h3 className="text-lg font-bold text-slate-100">Tambah User Baru</h3>
+              <h3 className="text-lg font-bold text-slate-100">Add New User</h3>
               <button onClick={() => { setIsCreateOpen(false); resetForm(); }} className="p-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
@@ -393,7 +393,7 @@ export default function AdminPage() {
             
             <form onSubmit={handleCreateSubmit} className="space-y-4 pt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Nama Lengkap</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Full Name</label>
                 <input
                   type="text"
                   required
@@ -421,7 +421,7 @@ export default function AdminPage() {
                 <input
                   type="password"
                   required
-                  placeholder="Minimal 6 karakter"
+                  placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full glass-input text-sm"
@@ -435,8 +435,8 @@ export default function AdminPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as 'USER' | 'ADMIN' })}
                   className="w-full glass-input text-sm cursor-pointer"
                 >
-                  <option value="USER" className="bg-sidebar-bg text-slate-200">USER (Biasa)</option>
-                  <option value="ADMIN" className="bg-sidebar-bg text-slate-200">ADMIN (Pengelola)</option>
+                  <option value="USER" className="bg-sidebar-bg text-slate-200">USER (Regular)</option>
+                  <option value="ADMIN" className="bg-sidebar-bg text-slate-200">ADMIN (Manager)</option>
                 </select>
               </div>
 
@@ -446,14 +446,14 @@ export default function AdminPage() {
                   onClick={() => { setIsCreateOpen(false); resetForm(); }}
                   className="px-4 py-2 rounded-xl border border-white/5 hover:bg-white/5 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submitting ? 'Menyimpan...' : 'Tambah User'}
+                  {submitting ? 'Saving...' : 'Add User'}
                 </button>
               </div>
             </form>
@@ -474,7 +474,7 @@ export default function AdminPage() {
             
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Nama Lengkap</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Full Name</label>
                 <input
                   type="text"
                   required
@@ -499,12 +499,12 @@ export default function AdminPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase">Password Baru</label>
-                  <span className="text-[10px] text-slate-500 italic">Kosongkan jika tidak diubah</span>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase">New Password</label>
+                  <span className="text-[10px] text-slate-500 italic">Leave blank if unchanged</span>
                 </div>
                 <input
                   type="password"
-                  placeholder="Minimal 6 karakter"
+                  placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full glass-input text-sm"
@@ -519,11 +519,11 @@ export default function AdminPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as 'USER' | 'ADMIN' })}
                   className="w-full glass-input text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <option value="USER" className="bg-sidebar-bg text-slate-200">USER (Biasa)</option>
-                  <option value="ADMIN" className="bg-sidebar-bg text-slate-200">ADMIN (Pengelola)</option>
+                  <option value="USER" className="bg-sidebar-bg text-slate-200">USER (Regular)</option>
+                  <option value="ADMIN" className="bg-sidebar-bg text-slate-200">ADMIN (Manager)</option>
                 </select>
                 {formData.id === currentAdminId && (
-                  <span className="text-[10px] text-amber-500/80 mt-1 block">Anda tidak dapat menurunkan role Anda sendiri.</span>
+                  <span className="text-[10px] text-amber-500/80 mt-1 block">You cannot demote your own role.</span>
                 )}
               </div>
 
@@ -533,14 +533,14 @@ export default function AdminPage() {
                   onClick={() => { setIsEditOpen(false); resetForm(); }}
                   className="px-4 py-2 rounded-xl border border-white/5 hover:bg-white/5 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  {submitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -557,9 +557,9 @@ export default function AdminPage() {
                 <AlertTriangle className="h-6 w-6 text-red-400 animate-bounce" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-100">Konfirmasi Hapus</h3>
+                <h3 className="text-lg font-bold text-slate-100">Confirm Deletion</h3>
                 <p className="text-sm text-slate-400 mt-2">
-                  Apakah Anda yakin ingin menghapus user <strong>{selectedUser.name}</strong> ({selectedUser.email})? Tindakan ini tidak dapat dibatalkan.
+                  Are you sure you want to delete the user <strong>{selectedUser.name}</strong> ({selectedUser.email})? This action cannot be undone.
                 </p>
               </div>
               <div className="flex items-center justify-center gap-3 w-full mt-4 pt-4 border-t border-white/8">
@@ -568,7 +568,7 @@ export default function AdminPage() {
                   onClick={() => { setIsDeleteOpen(false); setSelectedUser(null); }}
                   className="flex-1 py-2 rounded-xl border border-white/5 hover:bg-white/5 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -576,7 +576,7 @@ export default function AdminPage() {
                   disabled={submitting}
                   className="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submitting ? 'Menghapus...' : 'Hapus'}
+                  {submitting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

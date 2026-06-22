@@ -82,8 +82,8 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
           type="button"
           onClick={() => setValue('type', 'EXPENSE')}
           className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${selectedType === 'EXPENSE'
-              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+            : 'text-slate-400 hover:text-slate-200'
             }`}
         >
           Expense
@@ -92,8 +92,8 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
           type="button"
           onClick={() => setValue('type', 'INCOME')}
           className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${selectedType === 'INCOME'
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            : 'text-slate-400 hover:text-slate-200'
             }`}
         >
           Income
@@ -122,8 +122,8 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
               type="button"
               onClick={() => setValue('icon', icon)}
               className={`p-2 rounded-lg flex items-center justify-center transition-all border ${selectedIcon === icon
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                  : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-slate-900/40 text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200'
                 }`}
               title={icon}
             >
@@ -151,8 +151,8 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
               type="button"
               onClick={() => setValue('color', color)}
               className={`h-7 w-7 rounded-lg transition-all border-2 ${selectedColor === color
-                  ? 'border-white scale-110 shadow-lg'
-                  : 'border-transparent hover:scale-105'
+                ? 'border-white scale-110 shadow-lg'
+                : 'border-transparent hover:scale-105'
                 }`}
               style={{ backgroundColor: color }}
             />
@@ -206,7 +206,7 @@ export default function CategoryForm({ initialValues, onSubmit, onCancel }: Cate
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 py-2.5 text-sm rounded-xl bg-emerald-500 hover:bg-emerald-600 text-[#064e3b] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="flex-1 py-2.5 text-sm rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialValues ? 'Save Changes' : 'Create Category'}

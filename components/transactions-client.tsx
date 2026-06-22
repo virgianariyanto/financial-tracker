@@ -60,7 +60,7 @@ export default function TransactionsClient() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const LIMIT = 20;
+  const LIMIT = 8;
 
   const fetchTransactions = async (currentPage = page) => {
     setLoading(true);
@@ -383,11 +383,11 @@ export default function TransactionsClient() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between glass-panel rounded-2xl px-5 py-3">
           <p className="text-xs text-slate-500">
-            Menampilkan{' '}
+            Showing{' '}
             <span className="font-semibold text-slate-300">
               {Math.min((page - 1) * LIMIT + 1, total)}–{Math.min(page * LIMIT, total)}
             </span>{' '}
-            dari <span className="font-semibold text-slate-300">{total}</span> transaksi
+            of <span className="font-semibold text-slate-300">{total}</span> transactions
           </p>
           <div className="flex items-center gap-2">
             <button

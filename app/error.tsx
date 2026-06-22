@@ -29,11 +29,11 @@ export default function GlobalError({
           </div>
           
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-2">
-            Terjadi Kesalahan Sistem
+            System Error Occurred
           </h1>
           
           <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-            Maaf, kami mengalami kendala teknis saat memuat halaman ini. Silakan coba muat ulang atau kembali ke beranda.
+            Sorry, we encountered a technical issue while loading this page. Please try reloading or go back to home.
           </p>
 
           {/* Optional: Show error message in dev mode only if needed, but for safety keep it simple */}
@@ -49,14 +49,14 @@ export default function GlobalError({
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/10 cursor-pointer"
             >
               <RefreshCw className="h-4 w-4" />
-              Coba Lagi
+              Try Again
             </button>
             <Link
               href="/"
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-slate-300 hover:text-white text-sm font-semibold transition-all duration-200"
             >
               <Home className="h-4 w-4" />
-              Ke Beranda
+              Go to Home
             </Link>
           </div>
         </div>
