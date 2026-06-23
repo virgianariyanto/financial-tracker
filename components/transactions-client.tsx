@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { useCurrency } from '@/components/currency-context';
 import { useToast } from '@/components/toast-context';
 import { useConfirm } from '@/components/confirm-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Category {
   id: string;
@@ -405,9 +406,55 @@ export default function TransactionsClient() {
       {/* Transactions Table / List */}
       <div className="glass-panel rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
-            <p className="text-sm text-slate-400">Loading transactions...</p>
+          <div className="overflow-x-auto animate-fade-in">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/8 bg-slate-950/20">
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
+                  <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-20" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-12" /></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-xl" />
+                        <div>
+                          <Skeleton className="h-4 w-32 mb-2" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <div className="flex gap-1.5">
+                        <Skeleton className="h-5 w-12 rounded" />
+                        <Skeleton className="h-5 w-16 rounded" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4.5 flex justify-end">
+                      <Skeleton className="h-5 w-20" />
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center justify-end gap-2">
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">

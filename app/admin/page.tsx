@@ -14,6 +14,7 @@ import {
   X, 
   AlertTriangle 
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface UserRecord {
   id: string;
@@ -252,35 +253,49 @@ export default function AdminPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
-            <Users className="h-5 w-5 text-blue-400" />
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <div>
+                <Skeleton className="h-3 w-20 mb-1" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
+              <Users className="h-5 w-5 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium">Total Users</p>
+              <p className="text-2xl font-bold text-slate-100">{users.length}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">Total Users</p>
-            <p className="text-2xl font-bold text-slate-100">{users.length}</p>
+          <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
+              <Crown className="h-5 w-5 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium">Admin</p>
+              <p className="text-2xl font-bold text-slate-100">{totalAdmins}</p>
+            </div>
+          </div>
+          <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+              <UserCheck className="h-5 w-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium">Regular User</p>
+              <p className="text-2xl font-bold text-slate-100">{totalUsers}</p>
+            </div>
           </div>
         </div>
-        <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
-            <Crown className="h-5 w-5 text-amber-400" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">Admin</p>
-            <p className="text-2xl font-bold text-slate-100">{totalAdmins}</p>
-          </div>
-        </div>
-        <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-            <UserCheck className="h-5 w-5 text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">Regular User</p>
-            <p className="text-2xl font-bold text-slate-100">{totalUsers}</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Users Table */}
       <div className="glass-panel rounded-2xl overflow-hidden">
@@ -299,9 +314,39 @@ export default function AdminPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
-            <div className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <span className="text-sm">Loading user data...</span>
+          <div className="overflow-x-auto animate-fade-in">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8 bg-slate-950/20">
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-32" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
+                  <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
+                  <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-16" /></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {[1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4.5"><Skeleton className="h-4 w-48" /></td>
+                    <td className="px-6 py-4.5"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                    <td className="px-6 py-4.5"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-6 py-4.5">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">

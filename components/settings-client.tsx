@@ -5,6 +5,7 @@ import { Save, RefreshCw, CheckCircle, User, DollarSign, RotateCcw, AlertCircle,
 import { currencies } from '@/lib/currencies';
 import { useCurrency } from '@/components/currency-context';
 import { useConfirm } from '@/components/confirm-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsClient() {
   const { defaultCurrency: globalCurrency, updateDefaultCurrency } = useCurrency();
@@ -113,9 +114,42 @@ export default function SettingsClient() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-        <RefreshCw className="h-7 w-7 text-emerald-400 animate-spin" />
-        <p className="text-sm text-slate-400">Loading settings...</p>
+      <div className="space-y-6 max-w-xl animate-fade-in">
+        <div>
+          <Skeleton className="h-8 w-40 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="glass-panel p-6 rounded-2xl space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+          <div className="pt-4 border-t border-white/5 space-y-4">
+            <Skeleton className="h-5 w-32 mb-2" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4 border-t border-white/5">
+            <Skeleton className="h-10 w-32 rounded-xl" />
+            <Skeleton className="h-10 flex-1 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }

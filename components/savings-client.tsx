@@ -23,6 +23,7 @@ import { useCurrency } from '@/components/currency-context';
 import { formatCurrency as formatCurrencyLib } from '@/lib/currencies';
 import { useToast } from '@/components/toast-context';
 import { useConfirm } from '@/components/confirm-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SavingsGoal {
   id: string;
@@ -256,9 +257,46 @@ export default function SavingsClient() {
 
       {/* Grid List */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
-          <p className="text-sm text-slate-400">Loading goals...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div>
+                      <Skeleton className="h-4 w-32 mb-1.5" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-8" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <Skeleton className="h-3 w-12 mb-1.5" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <Skeleton className="h-3 w-12 mb-1.5" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between gap-3">
+                <Skeleton className="h-3 w-24" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-7 w-16 rounded-lg" />
+                  <Skeleton className="h-7 w-16 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : goals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-4">
