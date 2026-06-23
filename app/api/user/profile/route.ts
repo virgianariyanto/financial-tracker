@@ -78,6 +78,10 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
+      if (!user.password) {
+        return NextResponse.json({ error: 'This account uses Google Sign-In and does not have a password. Please set a new password directly.' }, { status: 400 });
+      }
+
       const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
       if (!isPasswordValid) {
         return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });

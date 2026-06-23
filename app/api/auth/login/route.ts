@@ -46,6 +46,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    // User registered via Google and has no password
+    if (!user.password) {
+      return NextResponse.json(
+        { error: 'This account uses Google Sign-In. Please use the "Continue with Google" button.' },
+        { status: 400 }
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
