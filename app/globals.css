@@ -292,3 +292,171 @@ body.modal-open aside {
 .light ::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.2);
 }
+
+/* Button Secondary Styling (Export buttons) */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #cbd5e1; /* slate-300 */
+  padding: 10px 16px;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9; /* slate-100 */
+}
+
+/* Light mode overrides for secondary button */
+.light .btn-secondary {
+  border-color: rgba(15, 23, 42, 0.12);
+  background-color: rgba(15, 23, 42, 0.02);
+  color: #334155; /* slate-700 */
+}
+
+.light .btn-secondary:hover {
+  border-color: rgba(15, 23, 42, 0.2);
+  background-color: rgba(15, 23, 42, 0.06);
+  color: #0f172a; /* slate-900 */
+}
+
+/* Print Media Styles */
+@media print {
+  body {
+    background: white !important;
+    color: #0f172a !important; /* slate-900 */
+    font-size: 9.5pt !important;
+  }
+
+  /* Force all headings and texts to be dark/high-contrast */
+  h1, h2, h3, h4, h5, h6, p, span, td, th, div {
+    color: #1e293b !important; /* slate-800 */
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Ensure the main title is dark */
+  h1 {
+    color: #0f172a !important; /* slate-900 */
+  }
+
+  /* Optimalkan warna teks pemasukan dan pengeluaran agar kontras tinggi */
+  .text-emerald-400, .text-emerald-600 {
+    color: #047857 !important; /* emerald-700 */
+    font-weight: bold !important;
+  }
+  .text-red-400, .text-red-600 {
+    color: #b91c1c !important; /* red-700 */
+    font-weight: bold !important;
+  }
+
+  /* Kategori badge: beri border hitam tipis daripada background berwarna yang tidak tercetak */
+  span[style*="background-color"] {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    color: #334155 !important;
+  }
+  
+  /* Tags list: buat lebih elegan */
+  span[class*="Tag"] {
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    background-color: #f8fafc !important;
+  }
+  
+  /* Sembunyikan elemen non-printable */
+  aside,
+  nav,
+  header,
+  button,
+  form,
+  select,
+  .print\:hidden,
+  /* pagination bar matching flex */
+  .flex.items-center.justify-between.glass-panel {
+    display: none !important;
+  }
+
+
+  /* Remove backgrounds/borders or make them print-friendly */
+  .glass-panel {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 24px !important;
+  }
+
+  thead tr {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid #94a3b8 !important;
+  }
+
+  th {
+    color: #334155 !important;
+    font-weight: bold !important;
+    padding: 12px 14px !important;
+    text-transform: uppercase !important;
+    font-size: 8.5pt !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 12px 14px !important;
+    font-size: 9pt !important;
+  }
+
+  /* Summary cards print layout */
+  .hidden.print\:flex {
+    display: flex !important;
+    gap: 16px !important;
+    justify-content: flex-end !important;
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .hidden.print\:flex > div {
+    border: 1px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+    min-width: 150px !important;
+  }
+
+  /* Reset container widths so it prints full page width */
+  main,
+  .container,
+  div,
+  .flex-1 {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Ensure page breaks inside rows are avoided */
+  tr {
+    page-break-inside: avoid !important;
+  }
+}

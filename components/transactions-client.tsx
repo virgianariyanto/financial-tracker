@@ -14,6 +14,8 @@ import {
   Tag,
   ChevronLeft,
   ChevronRight,
+  Download,
+  Printer,
 } from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import TransactionForm from '@/components/forms/transaction-form';
@@ -179,6 +181,21 @@ export default function TransactionsClient() {
     }
   };
 
+  const handleExportCSV = () => {
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.set('search', search);
+    if (typeFilter) queryParams.set('type', typeFilter);
+    if (catFilter) queryParams.set('categoryId', catFilter);
+    if (startDate) queryParams.set('startDate', startDate);
+    if (endDate) queryParams.set('endDate', endDate);
+
+    window.location.href = `/api/transactions/export?${queryParams.toString()}`;
+  };
+
+  const handleExportPDF = () => {
+    window.print();
+  };
+
   const resetFilters = () => {
     startTransition(() => {
       setSearch('');
@@ -190,24 +207,126 @@ export default function TransactionsClient() {
     });
   };
 
+  const printTotalIncome = transactions
+    .filter(t => t.type === 'INCOME')
+    .reduce((sum, t) => sum + convert(t.amount, t.currency), 0);
+
+  const printTotalExpense = transactions
+    .filter(t => t.type === 'EXPENSE')
+    .reduce((sum, t) => sum + convert(t.amount, t.currency), 0);
+
   return (
     <div className="space-y-6">
+      {/* PRINT-ONLY CONTAINER (visible ONLY when printing) */}
+      <div className="hidden print:block text-slate-800 font-sans w-full mx-auto space-y-6 bg-white p-0">
+        {/* Header Row */}
+        <div className="flex justify-between items-start border-b border-slate-200 pb-5">
+          <div>
+            <h1 className="text-3xl font-extrabold text-[#0f172a] tracking-tight">Finora Financial Report</h1>
+            <p className="text-sm text-slate-500 font-medium mt-1">Transaction History Statement</p>
+          </div>
+          <img src="/image/FINORA.png" alt="Finora Logo" className="h-10 object-contain" />
+        </div>
+
+        {/* Info Indicators & Summary */}
+        <div className="flex items-start justify-between pt-4 pb-6">
+          <div className="space-y-1 text-xs text-slate-500">
+            <p><span className="font-semibold">Generated on:</span> {format(new Date(), 'dd MMMM yyyy, HH:mm')}</p>
+            <p><span className="font-semibold">Period:</span> {startDate ? format(new Date(startDate), 'dd MMM yyyy') : 'All'} - {endDate ? format(new Date(endDate), 'dd MMM yyyy') : 'All'}</p>
+          </div>
+          <div className="text-right space-y-1">
+            <p className="text-xs text-slate-500"><span className="font-semibold">Total Income:</span> <span className="text-emerald-700 font-bold">{formatCurrency(printTotalIncome, defaultCurrency)}</span></p>
+            <p className="text-xs text-slate-500"><span className="font-semibold">Total Expense:</span> <span className="text-red-700 font-bold">{formatCurrency(printTotalExpense, defaultCurrency)}</span></p>
+          </div>
+        </div>
+
+        {/* Table representation for printing */}
+        <div className="pt-2">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-300 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <th className="px-4 py-3">Transaction</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {transactions.map((tx) => {
+                const isExpense = tx.type === 'EXPENSE';
+                return (
+                  <tr key={tx.id} className="hover:bg-slate-50/50">
+                    <td className="px-4 py-4">
+                      <div>
+                        <p className="font-bold text-[#0f172a]">{tx.description || 'No description'}</p>
+                        <p className="text-[10px] text-slate-400 capitalize">{tx.type.toLowerCase()}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 border border-slate-200 text-slate-600">
+                        {tx.category.name}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-slate-600">
+                      {format(new Date(tx.date), 'dd MMM yyyy')}
+                    </td>
+                    <td className={`px-4 py-4 text-right font-bold text-sm whitespace-nowrap ${isExpense ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {isExpense ? '-' : '+'}{formatCurrency(convert(tx.amount, tx.currency), defaultCurrency)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-slate-100 pt-8 mt-12 text-center">
+          <p className="text-[10px] text-slate-400 font-medium">Thank you for using Finora.</p>
+        </div>
+      </div>
+
+      {/* SCREEN CONTAINER (hidden when printing) */}
+      <div className="print:hidden space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-emerald-400">Transactions</h1>
           <p className="text-slate-400 text-sm">Manage, filter, and track all your family expenses and income.</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingTransaction(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
-        >
-          <Plus className="h-4.5 w-4.5" />
-          Add Transaction
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Export Excel */}
+          <button
+            onClick={handleExportCSV}
+            className="btn-secondary"
+            title="Export to Excel"
+          >
+            <Download className="h-4 w-4 text-emerald-500" />
+            <span className="hidden md:inline">Export Excel</span>
+          </button>
+          
+          {/* Export PDF */}
+          <button
+            onClick={handleExportPDF}
+            className="btn-secondary"
+            title="Export to PDF"
+          >
+            <Printer className="h-4 w-4 text-emerald-500" />
+            <span className="hidden md:inline">Export PDF</span>
+          </button>
+
+          {/* Add Transaction */}
+          <button
+            onClick={() => {
+              setEditingTransaction(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+          >
+            <Plus className="h-4.5 w-4.5" />
+            Add Transaction
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -453,6 +572,7 @@ export default function TransactionsClient() {
           }}
         />
       </Modal>
+      </div>
     </div>
   );
 }

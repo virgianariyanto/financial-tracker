@@ -117,9 +117,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-full flex text-slate-200 w-full bg-background">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 pl-0 lg:pl-[260px] min-h-screen flex flex-col w-full">
+      <div className="flex-1 pl-0 lg:pl-[260px] print:pl-0 min-h-screen flex flex-col w-full">
         {/* Global Premium Header */}
-        <header className="flex h-16 items-center justify-between px-6 bg-header-bg backdrop-blur-md sticky top-0 z-20 w-full">
+        <header className="print:hidden flex h-16 items-center justify-between px-6 bg-header-bg backdrop-blur-md sticky top-0 z-20 w-full">
           <div className="flex items-center gap-4 flex-1">
             {/* Mobile Menu Toggle */}
             <button
@@ -238,7 +238,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-6 md:p-8 print:p-0 overflow-y-auto max-w-7xl w-full mx-auto animate-fade-in">
           {children}
         </main>
       </div>
