@@ -69,13 +69,10 @@ export default function RegisterPage() {
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
           {/* Logo */}
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
-                <Wallet className="h-5.5 w-5.5" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">Finora</span>
+            <div className="flex items-center mb-3">
+              <img src="/image/FINORA_white.png" alt="Finora Logo" className="h-12 object-contain" />
             </div>
-            <p className="text-sm text-slate-500 ml-0.5">Start your financial journey</p>
+            <p className="text-sm text-slate-500 ml-1.5">Start your financial journey</p>
           </div>
 
           {/* Main hero text */}
@@ -137,11 +134,8 @@ export default function RegisterPage() {
 
         <div className="relative w-full max-w-[420px] animate-fade-in">
           {/* Mobile logo */}
-          <div className="flex items-center justify-center gap-2.5 mb-10 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold text-white tracking-tight">Finora</span>
+          <div className="flex items-center justify-center mb-10 lg:hidden">
+            <img src="/image/FINORA_white.png" alt="Finora Logo" className="h-12 object-contain" />
           </div>
 
           {/* Heading */}

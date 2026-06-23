@@ -66,13 +66,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       >
         <div className="flex h-16 items-center px-6 gap-2 justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
-              <Wallet className="h-6 w-6 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tighter text-foreground font-sans">Finora</h1>
-            </div>
+          <div className="flex items-center md:mx-auto gap-2">
+            <Link href="/" className="flex items-center">
+              <img src="/image/FINORA.png" alt="Finora Logo" className="h-12 object-contain hidden [.light_&]:block" />
+              <img src="/image/FINORA_white.png" alt="Finora Logo" className="h-12 object-contain block [.light_&]:hidden" />
+            </Link>
           </div>
           {/* Close button for mobile */}
           <button
