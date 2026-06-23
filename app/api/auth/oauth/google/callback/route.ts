@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const state = searchParams.get('state');
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '');
 
   // Get state from cookie
   const cookieHeader = request.headers.get('cookie') || '';
