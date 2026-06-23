@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import AppShell from "@/components/ui/app-shell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -58,7 +57,7 @@ export default function RootLayout({
         <CurrencyProvider>
           <ToastProvider>
             <ConfirmProvider>
-              <AppShell>{children}</AppShell>
+              {children}
               <ToastContainer />
             </ConfirmProvider>
           </ToastProvider>
