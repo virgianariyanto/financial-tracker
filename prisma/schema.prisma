@@ -22,6 +22,7 @@ model User {
   categories        Category[]
   savingsGoals      SavingsGoal[]
   transactions      Transaction[]
+  recurringTransactions RecurringTransaction[]
 }
 
 model Category {
@@ -37,24 +38,27 @@ model Category {
   budgets      Budget[]
   user         User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  recurringTransactions RecurringTransaction[]
 
   @@unique([name, userId])
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  amount      Float
-  currency    String          @default("IDR")
-  type        TransactionType
-  description String?
-  date        DateTime        @default(now())
-  tags        String[]        @default([])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  categoryId  String
-  userId      String
-  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                     String                @id @default(uuid())
+  amount                 Float
+  currency               String                @default("IDR")
+  type                   TransactionType
+  description            String?
+  date                   DateTime              @default(now())
+  tags                   String[]              @default([])
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  categoryId             String
+  userId                 String
+  category               Category              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recurringTransactionId String?
+  recurringTransaction   RecurringTransaction? @relation("RecurringSource", fields: [recurringTransactionId], references: [id], onDelete: SetNull)
 }
 
 model SavingsGoal {
@@ -113,4 +117,34 @@ enum TransactionType {
 enum BudgetPeriod {
   MONTHLY
   WEEKLY
+}
+
+enum RecurrenceInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model RecurringTransaction {
+  id             String             @id @default(uuid())
+  amount         Float
+  currency       String             @default("IDR")
+  type           TransactionType
+  description    String?
+  interval       RecurrenceInterval
+  startDate      DateTime
+  endDate        DateTime?
+  nextOccurrence DateTime
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  categoryId     String
+  category       Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions   Transaction[]      @relation("RecurringSource")
 }

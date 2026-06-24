@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthUserId } from '@/lib/auth';
 import { getExchangeRates, convertCurrency } from '@/lib/rates';
+import { processRecurringTransactions } from '@/lib/recurring-engine';
 
 export async function GET(request: Request) {
   try {
@@ -9,6 +10,9 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Jalankan pemrosesan transaksi berulang secara otomatis sebelum mengolah statistik
+    await processRecurringTransactions(userId);
 
     const { searchParams } = new URL(request.url);
     const targetCurrency = (searchParams.get('currency') || 'IDR').toUpperCase();

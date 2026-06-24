@@ -126,7 +126,7 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel }: T
           type="button"
           onClick={() => setValue('type', 'EXPENSE')}
           className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${transactionType === 'EXPENSE'
-            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+            ? 'bg-red-500/10 text-red-400 border-red-500/20'
             : 'text-slate-400 hover:text-slate-200'
             }`}
         >

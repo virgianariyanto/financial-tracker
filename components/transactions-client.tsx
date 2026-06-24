@@ -16,9 +16,12 @@ import {
   ChevronRight,
   Download,
   Printer,
+  Clock,
+  ArrowLeftRight,
 } from 'lucide-react';
 import Modal from '@/components/ui/modal';
 import TransactionForm from '@/components/forms/transaction-form';
+import RecurringForm from '@/components/forms/recurring-form';
 import { formatCurrency } from '@/lib/currencies';
 import { format } from 'date-fns';
 import { useCurrency } from '@/components/currency-context';
@@ -64,6 +67,13 @@ export default function TransactionsClient() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+  // Tabs state & Recurring state
+  const [activeTab, setActiveTab] = useState<'history' | 'recurring'>('history');
+  const [recurringSchedules, setRecurringSchedules] = useState<any[]>([]);
+  const [loadingRecurring, setLoadingRecurring] = useState(false);
+  const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<any>(null);
 
   // Filters state
   const [search, setSearch] = useState('');
@@ -294,6 +304,117 @@ export default function TransactionsClient() {
     });
   };
 
+  // --- RECURRING TRANSACTIONS LOGIC ---
+  const fetchRecurringSchedules = async () => {
+    setLoadingRecurring(true);
+    try {
+      const res = await fetch('/api/recurring-transactions');
+      if (res.ok) {
+        const data = await res.json();
+        setRecurringSchedules(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load recurring schedules', err);
+    } finally {
+      setLoadingRecurring(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'recurring') {
+      fetchRecurringSchedules();
+    }
+  }, [activeTab]);
+
+  const handleAddOrEditRecurring = async (payload: any) => {
+    try {
+      if (editingSchedule) {
+        const res = await fetch(`/api/recurring-transactions/${editingSchedule.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setIsRecurringModalOpen(false);
+          setEditingSchedule(null);
+          fetchRecurringSchedules();
+          fetchTransactions();
+          showToast('Recurring transaction schedule updated!', 'success');
+        } else {
+          showToast('Failed to update recurring schedule.', 'error');
+        }
+      } else {
+        const res = await fetch('/api/recurring-transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setIsRecurringModalOpen(false);
+          fetchRecurringSchedules();
+          fetchTransactions();
+          showToast('Recurring transaction schedule successfully added!', 'success');
+        } else {
+          showToast('Failed to add recurring schedule.', 'error');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save recurring schedule', err);
+      showToast('A network error occurred.', 'error');
+    }
+  };
+
+  const handleToggleRecurringActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/recurring-transactions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      });
+      if (res.ok) {
+        setRecurringSchedules(prev =>
+          prev.map(s => (s.id === id ? { ...s, isActive: !currentStatus } : s))
+        );
+        showToast(!currentStatus ? 'Schedule reactivated!' : 'Schedule paused!', 'info');
+        if (!currentStatus) {
+          fetchTransactions();
+          fetchRecurringSchedules();
+        }
+      } else {
+        showToast('Failed to update schedule status.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to toggle schedule status', err);
+      showToast('A network error occurred.', 'error');
+    }
+  };
+
+  const handleDeleteRecurring = async (id: string) => {
+    const ok = await showConfirm({
+      title: 'Delete Recurring Schedule',
+      message: 'Are you sure you want to delete this recurring transaction schedule? Future automated transactions will not be created. Past transactions will remain intact.',
+      confirmLabel: 'Delete Schedule',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/recurring-transactions/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        fetchRecurringSchedules();
+        showToast('Recurring transaction schedule deleted.', 'info');
+      } else {
+        showToast('Failed to delete schedule.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to delete schedule', err);
+      showToast('A network error occurred.', 'error');
+    }
+  };
+  // ------------------------------------
+
   const printTotalIncome = transactions
     .filter(t => t.type === 'INCOME')
     .reduce((sum, t) => sum + convert(t.amount, t.currency), 0);
@@ -378,45 +499,89 @@ export default function TransactionsClient() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-emerald-400">Transactions</h1>
-          <p className="text-slate-400 text-sm">Manage, filter, and track all your family expenses and income.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-emerald-400">
+            {activeTab === 'recurring' ? 'Recurring Transactions' : 'Transactions'}
+          </h1>
+          <p className="text-slate-400 text-sm">
+            {activeTab === 'recurring'
+              ? 'Schedule and manage your recurring expenses and income automatically.'
+              : 'Manage, filter, and track all your family expenses and income.'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Export Excel */}
-          <button
-            onClick={handleExportCSV}
-            className="btn-secondary"
-            title="Export to Excel"
-          >
-            <Download className="h-4 w-4 text-emerald-500" />
-            <span className="hidden md:inline">Export Excel</span>
-          </button>
-          
-          {/* Export PDF */}
-          <button
-            onClick={handleExportPDF}
-            className="btn-secondary"
-            title="Export to PDF"
-          >
-            <Printer className="h-4 w-4 text-emerald-500" />
-            <span className="hidden md:inline">Export PDF</span>
-          </button>
+          {/* Export Buttons - Only show for history tab */}
+          {activeTab === 'history' && (
+            <>
+              {/* Export Excel */}
+              <button
+                onClick={handleExportCSV}
+                className="btn-secondary"
+                title="Export to Excel"
+              >
+                <Download className="h-4 w-4 text-emerald-500" />
+                <span className="hidden md:inline">Export Excel</span>
+              </button>
+              
+              {/* Export PDF */}
+              <button
+                onClick={handleExportPDF}
+                className="btn-secondary"
+                title="Export to PDF"
+              >
+                <Printer className="h-4 w-4 text-red-500" />
+                <span className="hidden md:inline">Export PDF</span>
+              </button>
+            </>
+          )}
 
-          {/* Add Transaction */}
+          {/* Add Action Button */}
           <button
             onClick={() => {
-              setEditingTransaction(null);
-              setIsModalOpen(true);
+              if (activeTab === 'recurring') {
+                setEditingSchedule(null);
+                setIsRecurringModalOpen(true);
+              } else {
+                setEditingTransaction(null);
+                setIsModalOpen(true);
+              }
             }}
             className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
           >
             <Plus className="h-4.5 w-4.5" />
-            Add Transaction
+            {activeTab === 'recurring' ? 'Schedule Transaction' : 'Add Transaction'}
           </button>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
+      {/* Tabs Selector */}
+      <div className="flex border-b border-white/5 gap-6 pt-2">
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === 'history'
+              ? 'border-emerald-500 text-emerald-400 font-bold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          Transaction History
+        </button>
+        <button
+          onClick={() => setActiveTab('recurring')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === 'recurring'
+              ? 'border-emerald-500 text-emerald-400 font-bold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          Recurring Transactions
+        </button>
+      </div>
+
+      {activeTab === 'history' ? (
+        <>
+          {/* Filter Toolbar */}
       <div className="glass-panel rounded-2xl p-5 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           {/* Search Form */}
@@ -469,7 +634,7 @@ export default function TransactionsClient() {
       <div className="flex flex-col gap-4 pt-3.5 border-t border-white/5">
         {/* Quick Filters pills */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-slate-400 text-xs font-semibold mr-1.5">Filter Cepat:</span>
+          <span className="text-slate-400 text-xs font-semibold mr-1.5">Quick Filter:</span>
           {QUICK_DATE_FILTERS.map((filter) => {
             const isActive = activeQuickFilter === filter.id;
             return (
@@ -492,7 +657,7 @@ export default function TransactionsClient() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
             <Calendar className="h-4 w-4 text-slate-500" />
-            Rentang Tanggal Kustom:
+            Custom Date Range:
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -504,7 +669,7 @@ export default function TransactionsClient() {
               }}
               className="glass-input text-xs py-1.5 cursor-pointer"
             />
-            <span className="text-slate-500 text-xs">sampai</span>
+            <span className="text-slate-500 text-xs">to</span>
             <input
               type="date"
               value={endDate}
@@ -828,6 +993,159 @@ export default function TransactionsClient() {
           </div>
         </div>
       )}
+    </>
+  ) : (
+    /* Recurring Tab View */
+    <div className="space-y-6">
+      {loadingRecurring ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="glass-panel rounded-2xl p-5 relative overflow-hidden border border-white/5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9 rounded-xl" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recurringSchedules.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center px-4 glass-panel rounded-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-slate-400 mb-4 border border-white/5">
+                <Clock className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-semibold text-slate-200">No recurring transactions yet</h3>
+              <p className="text-sm text-slate-400 mt-1 max-w-sm">Schedule your monthly bills or regular income to automate your financial tracking intelligently.</p>
+              <button
+                onClick={() => {
+                  setEditingSchedule(null);
+                  setIsRecurringModalOpen(true);
+                }}
+                className="mt-4 px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-[#064e3b] transition-colors cursor-pointer"
+              >
+                Schedule First Transaction
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {recurringSchedules.map((schedule) => {
+                const isExpense = schedule.type === 'EXPENSE';
+                const intervalLabels: any = {
+                  DAILY: 'Daily',
+                  WEEKLY: 'Weekly',
+                  MONTHLY: 'Monthly',
+                  YEARLY: 'Yearly',
+                };
+                
+                return (
+                  <div key={schedule.id} className="glass-panel rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between border border-white/5 hover:border-white/10 transition-colors">
+                    {/* Top Row: Title, Category & Active Toggle */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                          isExpense
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        }`}>
+                          {isExpense ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-200 text-sm truncate">{schedule.description || 'No description'}</h4>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span
+                              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border"
+                              style={{
+                                backgroundColor: `${schedule.category.color}15`,
+                                color: schedule.category.color,
+                                borderColor: `${schedule.category.color}30`
+                              }}
+                            >
+                              {schedule.category.name}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-semibold border border-white/5">
+                              {intervalLabels[schedule.interval] || schedule.interval}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Custom Toggle Switch for Active Status */}
+                      <button
+                        onClick={() => handleToggleRecurringActive(schedule.id, schedule.isActive)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          schedule.isActive ? 'bg-emerald-500' : 'bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            schedule.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Middle Row: Amount & Occurrence Details */}
+                    <div className="my-5 flex justify-between items-baseline border-t border-b border-white/5 py-4">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Amount</span>
+                        <p className={`text-xl font-extrabold mt-1 ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {isExpense ? '-' : '+'}{formatCurrency(convert(schedule.amount, schedule.currency), defaultCurrency)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Next Due Date</span>
+                        <p className="text-xs text-slate-300 font-semibold mt-1.5 flex items-center justify-end gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                          {schedule.isActive 
+                            ? format(new Date(schedule.nextOccurrence), 'dd MMM yyyy')
+                            : 'Schedule Disabled'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Date Range & Actions */}
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <div>
+                        <span>Start: {format(new Date(schedule.startDate), 'dd MMM yy')}</span>
+                        {schedule.endDate && (
+                          <span className="ml-3">End: {format(new Date(schedule.endDate), 'dd MMM yy')}</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingSchedule(schedule);
+                            setIsRecurringModalOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Edit Schedule"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRecurring(schedule.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-red-400 transition-colors cursor-pointer"
+                          title="Delete Schedule"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add/Edit Transaction Modal */}
       <Modal
@@ -844,6 +1162,25 @@ export default function TransactionsClient() {
           onCancel={() => {
             setIsModalOpen(false);
             setEditingTransaction(null);
+          }}
+        />
+      </Modal>
+
+      {/* Add/Edit Recurring Schedule Modal */}
+      <Modal
+        isOpen={isRecurringModalOpen}
+        onClose={() => {
+          setIsRecurringModalOpen(false);
+          setEditingSchedule(null);
+        }}
+        title={editingSchedule ? 'Edit Recurring Schedule' : 'Schedule New Transaction'}
+      >
+        <RecurringForm
+          initialValues={editingSchedule}
+          onSubmit={handleAddOrEditRecurring}
+          onCancel={() => {
+            setIsRecurringModalOpen(false);
+            setEditingSchedule(null);
           }}
         />
       </Modal>

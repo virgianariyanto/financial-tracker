@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { z } from 'zod';
 import { getAuthUserId } from '@/lib/auth';
+import { processRecurringTransactions } from '@/lib/recurring-engine';
 
 const transactionSchema = z.object({
   amount: z.coerce.number().positive(),
@@ -19,6 +20,9 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Jalankan pemrosesan transaksi berulang secara otomatis sebelum mengambil data
+    await processRecurringTransactions(userId);
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
