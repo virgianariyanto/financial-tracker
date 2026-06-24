@@ -45,6 +45,15 @@ interface Transaction {
   category: Category;
 }
 
+const QUICK_DATE_FILTERS = [
+  { id: 'all', label: 'Semua Waktu' },
+  { id: 'today', label: 'Hari Ini' },
+  { id: 'this-week', label: 'Minggu Ini' },
+  { id: 'this-month', label: 'Bulan Ini' },
+  { id: 'last-month', label: 'Bulan Lalu' },
+  { id: 'this-year', label: 'Tahun Ini' },
+];
+
 export default function TransactionsClient() {
   const { convert, defaultCurrency } = useCurrency();
   const { showToast } = useToast();
@@ -62,6 +71,7 @@ export default function TransactionsClient() {
   const [catFilter, setCatFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [activeQuickFilter, setActiveQuickFilter] = useState('all');
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -197,6 +207,81 @@ export default function TransactionsClient() {
     window.print();
   };
 
+  const handleQuickFilterChange = (filterId: string) => {
+    setActiveQuickFilter(filterId);
+    
+    const today = new Date();
+    let start = '';
+    let end = '';
+
+    const formatDate = (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
+    switch (filterId) {
+      case 'today': {
+        const todayStr = formatDate(today);
+        start = todayStr;
+        end = todayStr;
+        break;
+      }
+      case 'this-week': {
+        const currentDay = today.getDay();
+        const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - distanceToMonday);
+        
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        start = formatDate(monday);
+        end = formatDate(sunday);
+        break;
+      }
+      case 'this-month': {
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const lastDay = new Date(yyyy, today.getMonth() + 1, 0).getDate();
+        start = `${yyyy}-${mm}-01`;
+        end = `${yyyy}-${mm}-${String(lastDay).padStart(2, '0')}`;
+        break;
+      }
+      case 'last-month': {
+        const tempDate = new Date();
+        tempDate.setDate(1); // Prevent month-overflow gotchas
+        tempDate.setMonth(tempDate.getMonth() - 1);
+        const lastMonthYear = tempDate.getFullYear();
+        const lastMonthMonth = tempDate.getMonth();
+        const lastMonthMmStr = String(lastMonthMonth + 1).padStart(2, '0');
+        const lastMonthLastDay = new Date(lastMonthYear, lastMonthMonth + 1, 0).getDate();
+        
+        start = `${lastMonthYear}-${lastMonthMmStr}-01`;
+        end = `${lastMonthYear}-${lastMonthMmStr}-${String(lastMonthLastDay).padStart(2, '0')}`;
+        break;
+      }
+      case 'this-year': {
+        const yyyy = today.getFullYear();
+        start = `${yyyy}-01-01`;
+        end = `${yyyy}-12-31`;
+        break;
+      }
+      case 'all':
+      default:
+        start = '';
+        end = '';
+        break;
+    }
+
+    startTransition(() => {
+      setStartDate(start);
+      setEndDate(end);
+      setPage(1);
+    });
+  };
+
   const resetFilters = () => {
     startTransition(() => {
       setSearch('');
@@ -204,6 +289,7 @@ export default function TransactionsClient() {
       setCatFilter('');
       setStartDate('');
       setEndDate('');
+      setActiveQuickFilter('all');
       setPage(1);
     });
   };
@@ -379,28 +465,58 @@ export default function TransactionsClient() {
           </div>
         </div>
 
-        {/* Date Filters */}
-        <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/5">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-            <Calendar className="h-4 w-4" />
-            Date Range:
+        {/* Quick Filters & Date Filters */}
+      <div className="flex flex-col gap-4 pt-3.5 border-t border-white/5">
+        {/* Quick Filters pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-slate-400 text-xs font-semibold mr-1.5">Filter Cepat:</span>
+          {QUICK_DATE_FILTERS.map((filter) => {
+            const isActive = activeQuickFilter === filter.id;
+            return (
+              <button
+                key={filter.id}
+                onClick={() => handleQuickFilterChange(filter.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-all cursor-pointer border ${
+                  isActive
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10 font-semibold'
+                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/5 hover:text-slate-100 hover:scale-[1.02] active:scale-[0.98]'
+                }`}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Date Range */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
+            <Calendar className="h-4 w-4 text-slate-500" />
+            Rentang Tanggal Kustom:
           </div>
           <div className="flex items-center gap-2">
             <input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="glass-input text-xs py-1.5"
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setActiveQuickFilter('custom');
+              }}
+              className="glass-input text-xs py-1.5 cursor-pointer"
             />
-            <span className="text-slate-500 text-xs">to</span>
+            <span className="text-slate-500 text-xs">sampai</span>
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="glass-input text-xs py-1.5"
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setActiveQuickFilter('custom');
+              }}
+              className="glass-input text-xs py-1.5 cursor-pointer"
             />
           </div>
         </div>
+      </div>
       </div>
 
       {/* Transactions Table / List */}
