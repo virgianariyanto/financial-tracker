@@ -16,6 +16,11 @@ declare global {
   var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
+// Reset cached Prisma client if the new models are not present (prevents dev hot-reload out-of-sync issues)
+if (globalThis.prismaGlobal && !('supportTicket' in globalThis.prismaGlobal)) {
+  globalThis.prismaGlobal = undefined;
+}
+
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma;

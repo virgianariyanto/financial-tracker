@@ -10,22 +10,37 @@ const DURATION = 3500;
 const CONFIG: Record<ToastType, {
   icon: React.ElementType;
   iconColor: string;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
 }> = {
   success: {
     icon: CheckCircle2,
-    iconColor: 'text-emerald-500',
+    iconColor: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
+    textColor: 'text-emerald-400',
   },
   error: {
     icon: XCircle,
-    iconColor: 'text-red-500',
+    iconColor: 'text-red-400',
+    bgColor: 'bg-red-500/10',
+    borderColor: 'border-red-500/20',
+    textColor: 'text-red-400',
   },
   warning: {
     icon: AlertTriangle,
-    iconColor: 'text-amber-500',
+    iconColor: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
+    textColor: 'text-amber-400',
   },
   info: {
     icon: Info,
-    iconColor: 'text-blue-500',
+    iconColor: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/20',
+    textColor: 'text-blue-400',
   },
 };
 
@@ -59,23 +74,24 @@ function ToastItem({ toast }: { toast: Toast }) {
   return (
     <div
       className={`
-        glass-panel relative flex items-center gap-3.5 pl-4 pr-3.5 py-3 rounded-xl
+        relative flex items-center gap-3.5 pl-4 pr-3.5 py-3 rounded-xl border
         w-auto max-w-[calc(100vw-2rem)] pointer-events-auto overflow-hidden
-        transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]
+        backdrop-blur-md shadow-lg transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${cfg.bgColor} ${cfg.borderColor}
         ${visible && !leaving
-          ? 'opacity-100 translate-x-0 scale-100'
-          : 'opacity-0 translate-x-8 scale-95'
+          ? 'opacity-100 translate-y-0 scale-100'
+          : 'opacity-0 translate-y-4 scale-95'
         }
       `}
     >
       {/* Icon */}
       <div className={`shrink-0 ${cfg.iconColor}`}>
-        <Icon className="h-5 w-5" strokeWidth={2} />
+        <Icon className="h-4.5 w-4.5" strokeWidth={2} />
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0 pr-1">
-        <p className="text-[13px] font-medium leading-snug text-slate-700 dark:text-slate-200" style={{ color: 'var(--foreground)' }}>
+        <p className={`text-xs font-semibold leading-snug ${cfg.textColor}`}>
           {toast.message}
         </p>
       </div>
@@ -83,7 +99,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100/50 dark:hover:text-slate-100 dark:hover:bg-white/10 transition-all"
+        className={`shrink-0 p-1 rounded-lg transition-all hover:bg-white/10 ${cfg.textColor}`}
       >
         <X className="h-3.5 w-3.5" />
       </button>

@@ -27,6 +27,10 @@ import {
   Globe,
   Clock,
   RotateCcw,
+  HelpCircle,
+  MessageSquare,
+  LifeBuoy,
+  CheckCircle2,
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,6 +38,7 @@ import { useConfirm } from '@/components/confirm-dialog';
 import Modal from '@/components/ui/modal';
 import CategoryForm from '@/components/forms/category-form';
 import { currencies, formatCurrency } from '@/lib/currencies';
+import { useToast } from '@/components/toast-context';
 
 interface UserRecord {
   id: string;
@@ -78,9 +83,26 @@ interface AdminTransaction {
   };
 }
 
+interface SupportTicketRecord {
+  id: string;
+  subject: string;
+  message: string;
+  category: 'ISSUE' | 'SUGGESTION' | 'FEEDBACK' | 'OTHER';
+  status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export default function AdminPage() {
   const showConfirm = useConfirm();
-  const [activeTab, setActiveTab] = useState<'users' | 'categories' | 'transactions'>('users');
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState<'users' | 'categories' | 'transactions' | 'support'>('users');
   
   // Users state
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -116,6 +138,26 @@ export default function AdminPage() {
   const [selectedTx, setSelectedTx] = useState<AdminTransaction | null>(null);
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
 
+  // Support Tickets state
+  const [tickets, setTickets] = useState<SupportTicketRecord[]>([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+  const [ticketPage, setTicketPage] = useState(1);
+  const [ticketLimit] = useState(10);
+  const [ticketTotal, setTicketTotal] = useState(0);
+  const [ticketTotalPages, setTicketTotalPages] = useState(1);
+  const [ticketSearch, setTicketSearch] = useState('');
+  const [ticketSearchInput, setTicketSearchInput] = useState('');
+  const [ticketStatusFilter, setTicketStatusFilter] = useState('');
+  const [ticketCatFilter, setTicketCatFilter] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicketRecord | null>(null);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [ticketStats, setTicketStats] = useState({
+    totalTickets: 0,
+    pending: 0,
+    inProgress: 0,
+    resolved: 0,
+  });
+
   // Modals state (Users)
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -131,8 +173,6 @@ export default function AdminPage() {
   });
   
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
 
@@ -220,6 +260,43 @@ export default function AdminPage() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchInput]);
 
+  // Fetch admin support tickets
+  async function fetchAdminTickets() {
+    setLoadingTickets(true);
+    try {
+      const queryParams = new URLSearchParams({
+        page: ticketPage.toString(),
+        limit: ticketLimit.toString(),
+        search: ticketSearch,
+        status: ticketStatusFilter,
+        category: ticketCatFilter,
+      });
+
+      const res = await fetch(`/api/admin/support?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data.tickets || []);
+        setTicketTotal(data.total || 0);
+        setTicketTotalPages(data.totalPages || 1);
+        setTicketStats(data.stats || { totalTickets: 0, pending: 0, inProgress: 0, resolved: 0 });
+      }
+    } catch (error) {
+      console.error('Error fetching admin support tickets:', error);
+    } finally {
+      setLoadingTickets(false);
+    }
+  }
+
+  // Debounce search input for support tickets
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setTicketSearch(ticketSearchInput);
+      setTicketPage(1);
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [ticketSearchInput]);
+
   useEffect(() => {
     fetchMe();
     fetchPresets(); // load presets on mount so they are ready for filter dropdown
@@ -232,8 +309,58 @@ export default function AdminPage() {
       fetchPresets();
     } else if (activeTab === 'transactions') {
       fetchTransactions();
+    } else if (activeTab === 'support') {
+      fetchAdminTickets();
     }
-  }, [activeTab, txPage, txSearch, txTypeFilter, txCatFilter, txStartDate, txEndDate, txCurrency]);
+  }, [activeTab, txPage, txSearch, txTypeFilter, txCatFilter, txStartDate, txEndDate, txCurrency, ticketPage, ticketSearch, ticketStatusFilter, ticketCatFilter]);
+
+  const handleUpdateTicketStatus = async (ticketId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/support/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        showNotification('success', 'Ticket status updated successfully.');
+        setIsTicketModalOpen(false);
+        setSelectedTicket(null);
+        fetchAdminTickets();
+      } else {
+        const errData = await res.json();
+        showNotification('error', errData.error || 'Failed to update ticket.');
+      }
+    } catch (error) {
+      showNotification('error', 'A system error occurred.');
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    const ok = await showConfirm({
+      title: 'Delete Support Ticket',
+      message: 'Are you sure you want to delete this ticket record? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/admin/support/${ticketId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showNotification('success', 'Ticket deleted successfully.');
+        setIsTicketModalOpen(false);
+        setSelectedTicket(null);
+        fetchAdminTickets();
+      } else {
+        const errData = await res.json();
+        showNotification('error', errData.error || 'Failed to delete ticket.');
+      }
+    } catch (error) {
+      showNotification('error', 'A network error occurred.');
+    }
+  };
 
   const handleTypeFilterChange = (val: '' | 'INCOME' | 'EXPENSE') => {
     setTxTypeFilter(val);
@@ -267,15 +394,7 @@ export default function AdminPage() {
   };
 
   const showNotification = (type: 'success' | 'error', message: string) => {
-    if (type === 'success') {
-      setSuccessMsg(message);
-      setErrorMsg('');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } else {
-      setErrorMsg(message);
-      setSuccessMsg('');
-      setTimeout(() => setErrorMsg(''), 5000);
-    }
+    showToast(message, type);
   };
 
   // Create User Handler
@@ -544,17 +663,6 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-8">
-      {/* Alerts */}
-      {successMsg && (
-        <div className="fixed top-6 right-6 z-50 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400 backdrop-blur-md shadow-lg animate-fade-in">
-          {successMsg}
-        </div>
-      )}
-      {errorMsg && (
-        <div className="fixed top-6 right-6 z-50 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400 backdrop-blur-md shadow-lg animate-fade-in">
-          {errorMsg}
-        </div>
-      )}
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -568,14 +676,18 @@ export default function AdminPage() {
                 ? 'User Management' 
                 : activeTab === 'categories' 
                   ? 'Category Presets' 
-                  : 'Transaction Ledger & Audit Trail'}
+                  : activeTab === 'transactions'
+                    ? 'Transaction Ledger & Audit Trail'
+                    : 'Support & Feedback Hub'}
             </h1>
             <p className="text-sm text-slate-400">
               {activeTab === 'users' 
                 ? 'Manage data and access rights for Finora users' 
                 : activeTab === 'categories'
                   ? 'Manage system-wide default category presets for new users'
-                  : 'Audit and monitor platform-wide transactions and records'}
+                  : activeTab === 'transactions'
+                    ? 'Audit and monitor platform-wide transactions and records'
+                    : 'Track and resolve user technical issues, bug reports, and suggestions'}
             </p>
           </div>
         </div>
@@ -634,6 +746,17 @@ export default function AdminPage() {
         >
           <Clock className="h-4 w-4" />
           Transaction Ledger
+        </button>
+        <button
+          onClick={() => setActiveTab('support')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+            activeTab === 'support'
+              ? 'border-emerald-500 text-emerald-400 font-bold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <HelpCircle className="h-4 w-4" />
+          Support Tickets
         </button>
       </div>
 
@@ -1018,7 +1141,7 @@ export default function AdminPage() {
             </div>
           )}
         </>
-      ) : (
+      ) : activeTab === 'transactions' ? (
         <>
           {/* Global Aggregated Statistics */}
           <div className="flex flex-col gap-4">
@@ -1420,6 +1543,347 @@ export default function AdminPage() {
             )}
           </div>
         </>
+      ) : (
+        <>
+          {/* Support Tickets Panel */}
+          
+          {/* Ticket Aggregated Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
+                <MessageSquare className="h-5 w-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium">Total Tickets</p>
+                <p className="text-2xl font-bold text-slate-100">{ticketStats.totalTickets}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
+                <Clock className="h-5 w-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium">Pending</p>
+                <p className="text-2xl font-bold text-amber-400">{ticketStats.pending}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 animate-pulse">
+                <LifeBuoy className="h-5 w-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium">In Progress</p>
+                <p className="text-2xl font-bold text-blue-400">{ticketStats.inProgress}</p>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 animate-pulse">
+                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium">Resolved</p>
+                <p className="text-2xl font-bold text-emerald-400">{ticketStats.resolved}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Ticket Filters */}
+          <div className="glass-panel rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                <Filter className="h-4 w-4 text-emerald-400" />
+                Support Ticket Filters
+              </div>
+              <button
+                onClick={() => {
+                  setTicketSearchInput('');
+                  setTicketSearch('');
+                  setTicketStatusFilter('');
+                  setTicketCatFilter('');
+                  setTicketPage(1);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/5 border border-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset Filters
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search subject, user, email..."
+                  value={ticketSearchInput}
+                  onChange={(e) => setTicketSearchInput(e.target.value)}
+                  className="w-full pl-3 pr-9 py-2 glass-input text-xs"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <select
+                value={ticketStatusFilter}
+                onChange={(e) => { setTicketStatusFilter(e.target.value); setTicketPage(1); }}
+                className="w-full glass-input text-xs cursor-pointer"
+              >
+                <option value="" className="bg-sidebar-bg text-slate-200">All Statuses</option>
+                <option value="PENDING" className="bg-sidebar-bg text-slate-200">Pending Only</option>
+                <option value="IN_PROGRESS" className="bg-sidebar-bg text-slate-200">In Progress Only</option>
+                <option value="RESOLVED" className="bg-sidebar-bg text-slate-200">Resolved Only</option>
+              </select>
+
+              {/* Category Filter */}
+              <select
+                value={ticketCatFilter}
+                onChange={(e) => { setTicketCatFilter(e.target.value); setTicketPage(1); }}
+                className="w-full glass-input text-xs cursor-pointer"
+              >
+                <option value="" className="bg-sidebar-bg text-slate-200">All Categories</option>
+                <option value="ISSUE" className="bg-sidebar-bg text-slate-200">Technical Issue</option>
+                <option value="SUGGESTION" className="bg-sidebar-bg text-slate-200">Feature Suggestion</option>
+                <option value="FEEDBACK" className="bg-sidebar-bg text-slate-200">General Feedback</option>
+                <option value="OTHER" className="bg-sidebar-bg text-slate-200">Other Inquiries</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tickets Table & Card Grid */}
+          <div className="glass-panel rounded-2xl overflow-hidden">
+            {loadingTickets ? (
+              <>
+                {/* Desktop Skeleton Table */}
+                <div className="hidden md:block overflow-x-auto animate-fade-in">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <th className="px-6 py-4 text-left">User</th>
+                        <th className="px-6 py-4 text-left">Category</th>
+                        <th className="px-6 py-4 text-left">Subject</th>
+                        <th className="px-6 py-4 text-left">Submitted</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {[1, 2, 3].map((i) => (
+                        <tr key={i}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <div>
+                                <Skeleton className="h-3 w-20 mb-1" />
+                                <Skeleton className="h-2 w-28" />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4"><Skeleton className="h-4.5 w-20 rounded-full" /></td>
+                          <td className="px-6 py-4"><Skeleton className="h-4 w-48" /></td>
+                          <td className="px-6 py-4"><Skeleton className="h-3.5 w-24" /></td>
+                          <td className="px-6 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                          <td className="px-6 py-4 text-right"><Skeleton className="h-7 w-7 rounded-lg inline-block" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Mobile Skeleton Cards */}
+                <div className="block md:hidden p-4 space-y-4 animate-fade-in">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-3 pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <div>
+                            <Skeleton className="h-3 w-16 mb-1" />
+                            <Skeleton className="h-2.5 w-24" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <Skeleton className="h-3.5 w-40" />
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : tickets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
+                <HelpCircle className="h-10 w-10 opacity-40 animate-pulse" />
+                <p className="text-sm">No support tickets found.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Support Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <th className="px-6 py-4 text-left">User</th>
+                        <th className="px-6 py-4 text-left">Category</th>
+                        <th className="px-6 py-4 text-left">Subject</th>
+                        <th className="px-6 py-4 text-left">Submitted</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-sm">
+                      {tickets.map((ticket) => (
+                        <tr key={ticket.id} className="hover:bg-white/2 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                                {ticket.user?.name ? ticket.user.name.substring(0, 2).toUpperCase() : 'US'}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-slate-200 truncate max-w-[150px]">{ticket.user?.name || 'Unknown'}</span>
+                                <span className="text-xs text-slate-500 truncate max-w-[150px]">{ticket.user?.email}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-300">
+                            <span className="text-xs font-semibold px-2 py-0.5 bg-white/5 border border-white/5 rounded-full uppercase tracking-wider text-slate-400">
+                              {ticket.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-200 font-medium max-w-[200px] truncate">
+                            {ticket.subject}
+                          </td>
+                          <td className="px-6 py-4 text-slate-400">
+                            {new Date(ticket.createdAt).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td className="px-6 py-4">
+                            {ticket.status === 'RESOLVED' ? (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                Resolved
+                              </span>
+                            ) : ticket.status === 'IN_PROGRESS' ? (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                                In Progress
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedTicket(ticket);
+                                setIsTicketModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                              title="View and Manage"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Support Tickets Cards List */}
+                <div className="block md:hidden divide-y divide-white/5">
+                  {tickets.map((ticket) => (
+                    <div key={ticket.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                            {ticket.user?.name ? ticket.user.name.substring(0, 2).toUpperCase() : 'US'}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-200 text-sm truncate max-w-[150px]">{ticket.user?.name || 'Unknown'}</span>
+                            <span className="text-xs text-slate-500 truncate max-w-[150px]">{ticket.user?.email}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {ticket.status === 'RESOLVED' ? (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                              Resolved
+                            </span>
+                          ) : ticket.status === 'IN_PROGRESS' ? (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                              In Progress
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                        <div className="flex flex-col min-w-0 pr-2">
+                          <span className="text-slate-200 font-semibold truncate max-w-[200px]">{ticket.subject}</span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{ticket.category}</span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-[10px] text-slate-500">
+                              {new Date(ticket.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedTicket(ticket);
+                            setIsTicketModalOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 transition-colors shrink-0"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Pagination Controls */}
+            {!loadingTickets && ticketTotalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-950/10 text-xs text-slate-400">
+                <div>
+                  Showing <span className="font-semibold text-slate-200">{Math.min(ticketTotal, (ticketPage - 1) * ticketLimit + 1)}</span> to{' '}
+                  <span className="font-semibold text-slate-200">{Math.min(ticketTotal, ticketPage * ticketLimit)}</span> of{' '}
+                  <span className="font-semibold text-slate-200">{ticketTotal}</span> tickets
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTicketPage(prev => Math.max(1, prev - 1))}
+                    disabled={ticketPage === 1}
+                    className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="font-medium text-slate-300">
+                    Page {ticketPage} of {ticketTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setTicketPage(prev => Math.min(ticketTotalPages, prev + 1))}
+                    disabled={ticketPage === ticketTotalPages}
+                    className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* CREATE USER MODAL */}
@@ -1796,6 +2260,187 @@ export default function AdminPage() {
                   className="w-full sm:w-auto px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold text-white transition-colors cursor-pointer text-center"
                 >
                   Close Audit Log
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUPPORT TICKET DETAIL & MANAGEMENT MODAL */}
+      {isTicketModalOpen && selectedTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/8">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-emerald-400" />
+                <h3 className="text-lg font-bold text-slate-100">Support Ticket Details</h3>
+              </div>
+              <button 
+                onClick={() => { setIsTicketModalOpen(false); setSelectedTicket(null); }} 
+                className="p-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 pt-5">
+              {/* Ticket ID & Metadata */}
+              <div className="p-3.5 rounded-xl bg-white/2 border border-white/5 space-y-2 text-left text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Ticket ID</span>
+                  <span className="text-[10px] font-mono text-slate-400 select-all">{selectedTicket.id}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Category</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 bg-white/5 border border-white/5 rounded-full uppercase tracking-wider text-slate-400">
+                    {selectedTicket.category}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Current Status</span>
+                  {selectedTicket.status === 'RESOLVED' ? (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                      Resolved
+                    </span>
+                  ) : selectedTicket.status === 'IN_PROGRESS' ? (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                      In Progress
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                      Pending
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* User Account Info */}
+              <div className="glass-panel rounded-xl p-4 space-y-3 text-sm text-left">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-1.5 flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 text-emerald-400" />
+                  Requester Information
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <span className="text-xs text-slate-500 block">User Name</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTicket.user?.name || 'Unknown User'}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Email Address</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTicket.user?.email || 'N/A'}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-xs text-slate-500 block">User ID</span>
+                    <span className="font-mono text-xs text-slate-400 block mt-0.5 select-all">{selectedTicket.userId}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ticket Subject and Description */}
+              <div className="glass-panel rounded-xl p-4 space-y-3.5 text-sm text-left">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-1.5 flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
+                  Subject & Message
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Subject</span>
+                    <span className="font-semibold text-slate-200 block mt-1 text-base">{selectedTicket.subject}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Description / Message</span>
+                    <div className="mt-1.5 p-3.5 rounded-xl bg-white/2 border border-white/5 text-slate-300 whitespace-pre-wrap leading-relaxed text-sm max-h-[200px] overflow-y-auto custom-scrollbar">
+                      {selectedTicket.message}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Update & Deletion Panel */}
+              <div className="glass-panel rounded-xl p-4 space-y-4 text-left">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-1.5 flex items-center gap-2">
+                  <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                  Management Actions
+                </h4>
+                
+                <div className="space-y-3">
+                  <span className="text-xs text-slate-400 font-medium block">Update Ticket Status:</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.id, 'PENDING')}
+                      disabled={selectedTicket.status === 'PENDING'}
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        selectedTicket.status === 'PENDING'
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 cursor-not-allowed opacity-60'
+                          : 'bg-white/2 hover:bg-amber-500/10 text-slate-300 hover:text-amber-400 border-white/5 hover:border-amber-500/20'
+                      }`}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.id, 'IN_PROGRESS')}
+                      disabled={selectedTicket.status === 'IN_PROGRESS'}
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        selectedTicket.status === 'IN_PROGRESS'
+                          ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 cursor-not-allowed opacity-60'
+                          : 'bg-white/2 hover:bg-blue-500/10 text-slate-300 hover:text-blue-400 border-white/5 hover:border-blue-500/20'
+                      }`}
+                    >
+                      <LifeBuoy className="h-3.5 w-3.5" />
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => handleUpdateTicketStatus(selectedTicket.id, 'RESOLVED')}
+                      disabled={selectedTicket.status === 'RESOLVED'}
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        selectedTicket.status === 'RESOLVED'
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed opacity-60'
+                          : 'bg-white/2 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-400 border-white/5 hover:border-emerald-500/20'
+                      }`}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Resolved
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">Danger Zone:</span>
+                  <button
+                    onClick={() => handleDeleteTicket(selectedTicket.id)}
+                    className="flex items-center gap-1.5 py-2 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs font-bold text-red-400 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete Ticket
+                  </button>
+                </div>
+              </div>
+
+              {/* Logs */}
+              <div className="grid grid-cols-2 gap-4 text-xs text-slate-500 bg-white/1 p-3 rounded-xl border border-white/5 text-left">
+                <div>
+                  <span>Submitted:</span>
+                  <span className="block font-medium text-slate-400 mt-0.5">
+                    {new Date(selectedTicket.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div>
+                  <span>Last Update:</span>
+                  <span className="block font-medium text-slate-400 mt-0.5">
+                    {new Date(selectedTicket.updatedAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-4 border-t border-white/8">
+                <button
+                  type="button"
+                  onClick={() => { setIsTicketModalOpen(false); setSelectedTicket(null); }}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer text-center"
+                >
+                  Close Ticket
                 </button>
               </div>
             </div>

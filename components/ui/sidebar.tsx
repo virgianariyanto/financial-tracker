@@ -13,6 +13,7 @@ import {
   Wallet,
   Shield,
   Users,
+  HelpCircle,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -22,6 +23,7 @@ const menuItems = [
   { name: 'Savings Goals', href: '/savings', icon: PiggyBank },
   { name: 'Budgets', href: '/budgets', icon: TrendingUp },
   { name: 'Categories', href: '/categories', icon: FolderTree },
+  { name: 'Support & Feedback', href: '/support', icon: HelpCircle },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

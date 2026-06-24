@@ -31,14 +31,21 @@ export async function GET(request: Request) {
 
     const rates = await getExchangeRates();
 
-    // 1. Fetch all expense categories
+    // Auto-initialize categories if the user has none (handles existing users and new signups)
+    const existingCategoriesCount = await prisma.category.count({
+      where: { userId },
+    });
+
+    if (existingCategoriesCount === 0) {
+      const { initializeUserCategories } = await import('@/lib/category-initializer');
+      await initializeUserCategories(userId);
+    }
+
+    // 1. Fetch all expense categories for the user
     const categories = await prisma.category.findMany({
       where: {
         type: 'EXPENSE',
-        OR: [
-          { userId: null },
-          { userId },
-        ],
+        userId, // ONLY fetch user's own categories to avoid duplicates
       },
       orderBy: { name: 'asc' },
     });
