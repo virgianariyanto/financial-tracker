@@ -10,44 +10,27 @@ const categorySchema = z.object({
   type: z.enum(['INCOME', 'EXPENSE']),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
-
-    const where: any = {};
-    if (type === 'INCOME' || type === 'EXPENSE') {
-      where.type = type;
+    // Verify user is ADMIN
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Auto-initialize categories if the user has none (handles existing users and new signups)
-    const existingCategoriesCount = await prisma.category.count({
-      where: { userId },
+    const presets = await prisma.category.findMany({
+      where: { userId: null },
+      orderBy: { name: 'asc' },
     });
 
-    if (existingCategoriesCount === 0) {
-      const { initializeUserCategories } = await import('@/lib/category-initializer');
-      await initializeUserCategories(userId);
-    }
-
-    const categories = await prisma.category.findMany({
-      where: {
-        ...where,
-        userId, // ONLY fetch user's own categories to avoid duplicates
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return NextResponse.json(categories);
+    return NextResponse.json(presets);
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
+    console.error('Failed to fetch category presets:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -59,6 +42,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Verify user is ADMIN
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await request.json();
     const result = categorySchema.safeParse(body);
 
@@ -66,32 +55,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ errors: result.error.flatten() }, { status: 400 });
     }
 
+    // Check for duplicate name globally
     const existing = await prisma.category.findFirst({
       where: {
         name: {
           equals: result.data.name,
           mode: 'insensitive',
         },
-        userId, // Only check duplicates within the user's own categories
+        userId: null,
       },
     });
 
     if (existing) {
-      return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
+      return NextResponse.json({ error: 'A preset category with this name already exists' }, { status: 409 });
     }
 
     const category = await prisma.category.create({
       data: {
         ...result.data,
-        userId,
-        isDefault: false,
+        userId: null,
+        isDefault: true,
       },
     });
 
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
-    console.error('Failed to create category:', error);
+    console.error('Failed to create category preset:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-

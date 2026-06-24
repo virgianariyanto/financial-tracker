@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth';
 import { z } from 'zod';
 import { rateLimit, getIpFromRequest } from '@/lib/rate-limit';
+import { initializeUserCategories } from '@/lib/category-initializer';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -56,6 +57,9 @@ export async function POST(req: Request) {
         password: hashedPassword,
       },
     });
+
+    // Initialize default categories for the new user
+    await initializeUserCategories(user.id);
 
     const token = await signJWT({ id: user.id, email: user.email, role: user.role });
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { signJWT } from '@/lib/auth';
+import { initializeUserCategories } from '@/lib/category-initializer';
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -95,6 +96,9 @@ export async function GET(request: Request) {
           // password is null for Google users
         },
       });
+
+      // Initialize default categories for the new Google user
+      await initializeUserCategories(user.id);
     }
 
     // Create JWT session

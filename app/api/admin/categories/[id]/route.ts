@@ -10,37 +10,6 @@ const updateCategorySchema = z.object({
   type: z.enum(['INCOME', 'EXPENSE']).optional(),
 });
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  try {
-    const userId = await getAuthUserId();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const category = await prisma.category.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { transactions: true, budgets: true },
-        },
-      },
-    });
-
-    if (!category || category.userId !== userId) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(category);
-  } catch (error) {
-    console.error('Failed to fetch category:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  }
-}
-
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -52,6 +21,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Verify user is ADMIN
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await request.json();
     const result = updateCategorySchema.safeParse(body);
 
@@ -60,8 +35,8 @@ export async function PATCH(
     }
 
     const existing = await prisma.category.findUnique({ where: { id } });
-    if (!existing || existing.userId !== userId) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    if (!existing || existing.userId !== null) {
+      return NextResponse.json({ error: 'Preset category not found' }, { status: 404 });
     }
 
     // Check for duplicate name if name is being changed
@@ -72,11 +47,11 @@ export async function PATCH(
             equals: result.data.name,
             mode: 'insensitive',
           },
-          userId,
+          userId: null,
         },
       });
       if (duplicate) {
-        return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
+        return NextResponse.json({ error: 'A preset category with this name already exists' }, { status: 409 });
       }
     }
 
@@ -87,7 +62,7 @@ export async function PATCH(
 
     return NextResponse.json(category);
   } catch (error) {
-    console.error('Failed to update category:', error);
+    console.error('Failed to update category preset:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -103,32 +78,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const existing = await prisma.category.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { transactions: true },
-        },
-      },
-    });
-
-    if (!existing || existing.userId !== userId) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    // Verify user is ADMIN
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (existing._count.transactions > 0) {
-      return NextResponse.json(
-        { error: `Cannot delete: this category has ${existing._count.transactions} transactions linked to it. Remove or reassign them first.` },
-        { status: 409 }
-      );
+    const existing = await prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!existing || existing.userId !== null) {
+      return NextResponse.json({ error: 'Preset category not found' }, { status: 404 });
     }
 
     await prisma.category.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete category:', error);
+    console.error('Failed to delete category preset:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-

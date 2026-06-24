@@ -22,7 +22,7 @@ const iconOptions = [
   'GraduationCap', 'Home', 'Shirt', 'Fuel', 'Plane', 'Gift',
   'Briefcase', 'Wallet', 'TrendingUp', 'Landmark', 'BadgeDollarSign',
   'HandCoins', 'PiggyBank', 'CreditCard', 'Baby', 'Dog',
-  'Dumbbell', 'Music', 'Film', 'Coffee', 'Wifi', 'Phone',
+  'Dumbbell', 'Music', 'Film', 'Coffee', 'Wifi', 'Phone', 'Settings',
 ];
 
 const colorOptions = [
