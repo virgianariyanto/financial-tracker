@@ -406,55 +406,87 @@ export default function TransactionsClient() {
       {/* Transactions Table / List */}
       <div className="glass-panel rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="overflow-x-auto animate-fade-in">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/8 bg-slate-950/20">
-                  <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
-                  <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
-                  <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
-                  <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
-                  <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-20" /></th>
-                  <th className="px-6 py-4"><Skeleton className="h-4 w-12" /></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i}>
-                    <td className="px-6 py-4.5">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-9 w-9 rounded-xl" />
-                        <div>
-                          <Skeleton className="h-4 w-32 mb-2" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4.5">
-                      <Skeleton className="h-6 w-24 rounded-full" />
-                    </td>
-                    <td className="px-6 py-4.5">
-                      <Skeleton className="h-4 w-24" />
-                    </td>
-                    <td className="px-6 py-4.5">
-                      <div className="flex gap-1.5">
-                        <Skeleton className="h-5 w-12 rounded" />
-                        <Skeleton className="h-5 w-16 rounded" />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4.5 flex justify-end">
-                      <Skeleton className="h-5 w-20" />
-                    </td>
-                    <td className="px-6 py-4.5">
-                      <div className="flex items-center justify-end gap-2">
-                        <Skeleton className="h-7 w-7 rounded-lg" />
-                        <Skeleton className="h-7 w-7 rounded-lg" />
-                      </div>
-                    </td>
+          <div className="animate-fade-in">
+            {/* Desktop Table Skeleton */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/8 bg-slate-950/20">
+                    <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                    <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
+                    <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                    <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
+                    <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-20" /></th>
+                    <th className="px-6 py-4"><Skeleton className="h-4 w-12" /></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4.5">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-9 w-9 rounded-xl" />
+                          <div>
+                            <Skeleton className="h-4 w-32 mb-2" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <Skeleton className="h-6 w-24 rounded-full" />
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <Skeleton className="h-4 w-24" />
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <div className="flex gap-1.5">
+                          <Skeleton className="h-5 w-12 rounded" />
+                          <Skeleton className="h-5 w-16 rounded" />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4.5 flex justify-end">
+                        <Skeleton className="h-5 w-20" />
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <div className="flex items-center justify-end gap-2">
+                          <Skeleton className="h-7 w-7 rounded-lg" />
+                          <Skeleton className="h-7 w-7 rounded-lg" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards Skeleton */}
+            <div className="block md:hidden divide-y divide-white/5">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 rounded-xl" />
+                      <div>
+                        <Skeleton className="h-4 w-28 mb-2" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <div className="flex gap-1.5 pl-12">
+                    <Skeleton className="h-4 w-10 rounded" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                  </div>
+                  <div className="flex items-center justify-between border-t border-white/5 pt-2.5 pl-12">
+                    <Skeleton className="h-3.5 w-24" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-7 w-7 rounded-lg" />
+                      <Skeleton className="h-7 w-7 rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -465,111 +497,191 @@ export default function TransactionsClient() {
             <p className="text-sm text-slate-400 mt-1 max-w-sm">Try modifying your filters or add a new transaction to get started.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <th className="px-6 py-4">Transaction</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Tags</th>
-                  <th className="px-6 py-4 text-right">Amount</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
-                {transactions.map((tx) => {
-                  const isExpense = tx.type === 'EXPENSE';
-                  return (
-                    <tr key={tx.id} className="hover:bg-white/2 transition-colors">
-                      {/* Description & Type Icon */}
-                      <td className="px-6 py-4.5">
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${isExpense
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            }`}>
-                            {isExpense ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
+          <div>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-4">Transaction</th>
+                    <th className="px-6 py-4">Category</th>
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Tags</th>
+                    <th className="px-6 py-4 text-right">Amount</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-sm">
+                  {transactions.map((tx) => {
+                    const isExpense = tx.type === 'EXPENSE';
+                    return (
+                      <tr key={tx.id} className="hover:bg-white/2 transition-colors">
+                        {/* Description & Type Icon */}
+                        <td className="px-6 py-4.5">
+                          <div className="flex items-center gap-3">
+                            <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${isExpense
+                              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              }`}>
+                              {isExpense ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-slate-200">{tx.description || 'No description'}</p>
+                              <p className="text-xs text-slate-500 capitalize">{tx.type.toLowerCase()}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-slate-200">{tx.description || 'No description'}</p>
-                            <p className="text-xs text-slate-500 capitalize">{tx.type.toLowerCase()}</p>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Category */}
-                      <td className="px-6 py-4.5">
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
-                          style={{
-                            backgroundColor: `${tx.category.color}15`,
-                            color: tx.category.color,
-                            borderColor: `${tx.category.color}30`
-                          }}
-                        >
-                          {tx.category.name}
-                        </span>
-                      </td>
-
-                      {/* Date */}
-                      <td className="px-6 py-4.5 text-slate-300">
-                        {format(new Date(tx.date), 'dd MMM yyyy')}
-                      </td>
-
-                      {/* Tags */}
-                      <td className="px-6 py-4.5">
-                        <div className="flex flex-wrap gap-1.5 max-w-xs">
-                          {tx.tags.length > 0 ? (
-                            tx.tags.map((tag) => (
-                              <span key={tag} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] text-slate-400 font-medium">
-                                <Tag className="h-2.5 w-2.5" />
-                                {tag}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-slate-600 text-xs">-</span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Amount */}
-                      <td className={`px-6 py-4.5 text-right font-bold text-base ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {isExpense ? '-' : '+'}{formatCurrency(convert(tx.amount, tx.currency), defaultCurrency)}
-                      </td>
-
-                      {/* Action buttons */}
-                      <td className="px-6 py-4.5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingTransaction(tx);
-                              setIsModalOpen(true);
+                        {/* Category */}
+                        <td className="px-6 py-4.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                            style={{
+                              backgroundColor: `${tx.category.color}15`,
+                              color: tx.category.color,
+                              borderColor: `${tx.category.color}30`
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
                           >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(tx.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-red-400 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                            {tx.category.name}
+                          </span>
+                        </td>
+
+                        {/* Date */}
+                        <td className="px-6 py-4.5 text-slate-300">
+                          {format(new Date(tx.date), 'dd MMM yyyy')}
+                        </td>
+
+                        {/* Tags */}
+                        <td className="px-6 py-4.5">
+                          <div className="flex flex-wrap gap-1.5 max-w-xs">
+                            {tx.tags.length > 0 ? (
+                              tx.tags.map((tag) => (
+                                <span key={tag} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] text-slate-400 font-medium">
+                                  <Tag className="h-2.5 w-2.5" />
+                                  {tag}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-slate-600 text-xs">-</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Amount */}
+                        <td className={`px-6 py-4.5 text-right font-bold text-base ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {isExpense ? '-' : '+'}{formatCurrency(convert(tx.amount, tx.currency), defaultCurrency)}
+                        </td>
+
+                        {/* Action buttons */}
+                        <td className="px-6 py-4.5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingTransaction(tx);
+                                setIsModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors cursor-pointer"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(tx.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-white/5 hover:text-red-400 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden divide-y divide-white/5">
+              {transactions.map((tx) => {
+                const isExpense = tx.type === 'EXPENSE';
+                return (
+                  <div key={tx.id} className="p-4 space-y-3 hover:bg-white/2 transition-colors">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${isExpense
+                          ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          }`}>
+                          {isExpense ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-200 text-sm truncate">{tx.description || 'No description'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border"
+                              style={{
+                                backgroundColor: `${tx.category.color}15`,
+                                color: tx.category.color,
+                                borderColor: `${tx.category.color}30`
+                              }}
+                            >
+                              {tx.category.name}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`text-right font-bold text-base whitespace-nowrap ${isExpense ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {isExpense ? '-' : '+'}{formatCurrency(convert(tx.amount, tx.currency), defaultCurrency)}
+                      </div>
+                    </div>
+
+                    {/* Tags Row */}
+                    {tx.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pl-12">
+                        {tx.tags.map((tag) => (
+                          <span key={tag} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] text-slate-400 font-medium">
+                            <Tag className="h-2.5 w-2.5" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Footer Row (Date & Actions) */}
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2.5 pl-12">
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        <span>{format(new Date(tx.date), 'dd MMM yyyy')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingTransaction(tx);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(tx.id)}
+                          className="p-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
 
       {/* Pagination Bar */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between glass-panel rounded-2xl px-5 py-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 glass-panel rounded-2xl px-5 py-3.5">
           <p className="text-xs text-slate-500">
             Showing{' '}
             <span className="font-semibold text-slate-300">
