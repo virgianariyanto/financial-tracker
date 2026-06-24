@@ -5,11 +5,8 @@ import {
   HelpCircle, 
   Send, 
   Clock, 
-  AlertCircle, 
-  CheckCircle2, 
   MessageSquare,
   ChevronRight,
-  LifeBuoy
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Modal from '@/components/ui/modal';
@@ -93,9 +90,9 @@ export default function SupportPage() {
 
       {/* Page Header */}
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/20">
-          <LifeBuoy className="h-6 w-6 text-emerald-400" />
-        </div>
+        {/* <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/20">
+          <HelpCircle className="h-6 w-6 text-emerald-400" />
+        </div> */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-emerald-400">Support & Feedback Hub</h1>
           <p className="text-sm text-slate-400">Need help or want to write a suggestion for Finora? Reach out to our administrators.</p>

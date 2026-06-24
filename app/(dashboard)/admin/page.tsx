@@ -1888,7 +1888,7 @@ export default function AdminPage() {
 
       {/* CREATE USER MODAL */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-white/8">
               <h3 className="text-lg font-bold text-slate-100">Add New User</h3>
@@ -1969,7 +1969,7 @@ export default function AdminPage() {
 
       {/* EDIT USER MODAL */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-white/8">
               <h3 className="text-lg font-bold text-slate-100">Edit User</h3>
@@ -2056,7 +2056,7 @@ export default function AdminPage() {
 
       {/* DELETE USER CONFIRM MODAL */}
       {isDeleteOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-sidebar-bg p-6 shadow-2xl animate-scale-in">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/15 border border-red-500/20">
@@ -2111,7 +2111,7 @@ export default function AdminPage() {
 
       {/* READ-ONLY TRANSACTION DETAIL MODAL (AUDIT TRAIL) */}
       {isTxModalOpen && selectedTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-white/8">
               <div className="flex items-center gap-2">
@@ -2269,7 +2269,7 @@ export default function AdminPage() {
 
       {/* SUPPORT TICKET DETAIL & MANAGEMENT MODAL */}
       {isTicketModalOpen && selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-white/8">
               <div className="flex items-center gap-2">
