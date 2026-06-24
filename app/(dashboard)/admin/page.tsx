@@ -17,12 +17,23 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Edit3,
+  Activity,
+  Eye,
+  Calendar,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Tag,
+  Globe,
+  Clock,
+  RotateCcw,
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConfirm } from '@/components/confirm-dialog';
 import Modal from '@/components/ui/modal';
 import CategoryForm from '@/components/forms/category-form';
+import { currencies, formatCurrency } from '@/lib/currencies';
 
 interface UserRecord {
   id: string;
@@ -41,9 +52,35 @@ interface PresetCategory {
   isDefault: boolean;
 }
 
+interface AdminTransaction {
+  id: string;
+  amount: number;
+  currency: string;
+  type: 'INCOME' | 'EXPENSE';
+  description: string | null;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  categoryId: string;
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  category: {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    type: 'INCOME' | 'EXPENSE';
+    isDefault: boolean;
+  };
+}
+
 export default function AdminPage() {
   const showConfirm = useConfirm();
-  const [activeTab, setActiveTab] = useState<'users' | 'categories'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'categories' | 'transactions'>('users');
   
   // Users state
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -56,6 +93,28 @@ export default function AdminPage() {
   const [presetTypeFilter, setPresetTypeFilter] = useState<'' | 'INCOME' | 'EXPENSE'>('');
   const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PresetCategory | null>(null);
+
+  // Transaction Ledger state
+  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
+  const [loadingTx, setLoadingTx] = useState(true);
+  const [txPage, setTxPage] = useState(1);
+  const [txLimit] = useState(10);
+  const [txTotal, setTxTotal] = useState(0);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txSearch, setTxSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [txTypeFilter, setTxTypeFilter] = useState<'' | 'INCOME' | 'EXPENSE'>('');
+  const [txCatFilter, setTxCatFilter] = useState('');
+  const [txStartDate, setTxStartDate] = useState('');
+  const [txEndDate, setTxEndDate] = useState('');
+  const [txCurrency, setTxCurrency] = useState('IDR');
+  const [txStats, setTxStats] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    totalVolume: 0,
+  });
+  const [selectedTx, setSelectedTx] = useState<AdminTransaction | null>(null);
+  const [isTxModalOpen, setIsTxModalOpen] = useState(false);
 
   // Modals state (Users)
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -121,17 +180,91 @@ export default function AdminPage() {
     }
   }
 
+  // Fetch global transaction ledger
+  async function fetchTransactions() {
+    setLoadingTx(true);
+    try {
+      const queryParams = new URLSearchParams({
+        page: txPage.toString(),
+        limit: txLimit.toString(),
+        search: txSearch,
+        type: txTypeFilter,
+        categoryId: txCatFilter,
+        startDate: txStartDate,
+        endDate: txEndDate,
+        currency: txCurrency,
+      });
+
+      const res = await fetch(`/api/admin/transactions?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(data.transactions || []);
+        setTxTotal(data.total || 0);
+        setTxTotalPages(data.totalPages || 1);
+        setTxStats(data.stats || { totalIncome: 0, totalExpense: 0, totalVolume: 0 });
+      }
+    } catch (error) {
+      console.error('Error fetching admin transactions:', error);
+    } finally {
+      setLoadingTx(false);
+    }
+  }
+
+  // Debounce search input for transactions ledger
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setTxSearch(searchInput);
+      setTxPage(1);
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
   useEffect(() => {
     fetchMe();
+    fetchPresets(); // load presets on mount so they are ready for filter dropdown
   }, []);
 
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
-    } else {
+    } else if (activeTab === 'categories') {
       fetchPresets();
+    } else if (activeTab === 'transactions') {
+      fetchTransactions();
     }
-  }, [activeTab]);
+  }, [activeTab, txPage, txSearch, txTypeFilter, txCatFilter, txStartDate, txEndDate, txCurrency]);
+
+  const handleTypeFilterChange = (val: '' | 'INCOME' | 'EXPENSE') => {
+    setTxTypeFilter(val);
+    setTxPage(1);
+  };
+
+  const handleCatFilterChange = (val: string) => {
+    setTxCatFilter(val);
+    setTxPage(1);
+  };
+
+  const handleStartDateChange = (val: string) => {
+    setTxStartDate(val);
+    setTxPage(1);
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setTxEndDate(val);
+    setTxPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchInput('');
+    setTxSearch('');
+    setTxTypeFilter('');
+    setTxCatFilter('');
+    setTxStartDate('');
+    setTxEndDate('');
+    setTxCurrency('IDR');
+    setTxPage(1);
+  };
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     if (type === 'success') {
@@ -431,17 +564,23 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-emerald-400">
-              {activeTab === 'users' ? 'User Management' : 'Category Presets'}
+              {activeTab === 'users' 
+                ? 'User Management' 
+                : activeTab === 'categories' 
+                  ? 'Category Presets' 
+                  : 'Transaction Ledger & Audit Trail'}
             </h1>
             <p className="text-sm text-slate-400">
               {activeTab === 'users' 
                 ? 'Manage data and access rights for Finora users' 
-                : 'Manage system-wide default category presets for new users'}
+                : activeTab === 'categories'
+                  ? 'Manage system-wide default category presets for new users'
+                  : 'Audit and monitor platform-wide transactions and records'}
             </p>
           </div>
         </div>
         
-        {activeTab === 'users' ? (
+        {activeTab === 'users' && (
           <button
             onClick={() => { resetForm(); setIsCreateOpen(true); }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-all duration-200 shadow-md shadow-emerald-500/10 outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
@@ -449,7 +588,8 @@ export default function AdminPage() {
             <Plus className="h-4.5 w-4.5" />
             Add User
           </button>
-        ) : (
+        )}
+        {activeTab === 'categories' && (
           <button
             onClick={() => { setEditingPreset(null); setIsPresetModalOpen(true); }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-all duration-200 shadow-md shadow-emerald-500/10 outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
@@ -461,10 +601,10 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex border-b border-white/5 gap-6 pt-2">
+      <div className="flex border-b border-white/5 gap-4 sm:gap-6 pt-2 overflow-x-auto no-scrollbar whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => setActiveTab('users')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
             activeTab === 'users'
               ? 'border-emerald-500 text-emerald-400 font-bold'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -475,7 +615,7 @@ export default function AdminPage() {
         </button>
         <button
           onClick={() => setActiveTab('categories')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
             activeTab === 'categories'
               ? 'border-emerald-500 text-emerald-400 font-bold'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -483,6 +623,17 @@ export default function AdminPage() {
         >
           <FolderTree className="h-4 w-4" />
           Category Presets
+        </button>
+        <button
+          onClick={() => setActiveTab('transactions')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+            activeTab === 'transactions'
+              ? 'border-emerald-500 text-emerald-400 font-bold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          Transaction Ledger
         </button>
       </div>
 
@@ -550,118 +701,208 @@ export default function AdminPage() {
             </div>
 
             {loading ? (
-              <div className="overflow-x-auto animate-fade-in">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/8 bg-slate-950/20">
-                      <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
-                      <th className="px-6 py-4"><Skeleton className="h-4 w-32" /></th>
-                      <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
-                      <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
-                      <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-16" /></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {[1, 2, 3, 4].map((i) => (
-                      <tr key={i}>
-                        <td className="px-6 py-4.5">
-                          <div className="flex items-center gap-3">
-                            <Skeleton className="h-8 w-8 rounded-full" />
-                            <Skeleton className="h-4 w-32" />
-                          </div>
-                        </td>
-                        <td className="px-6 py-4.5"><Skeleton className="h-4 w-48" /></td>
-                        <td className="px-6 py-4.5"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                        <td className="px-6 py-4.5"><Skeleton className="h-4 w-24" /></td>
-                        <td className="px-6 py-4.5">
-                          <div className="flex items-center justify-end gap-2.5">
-                            <Skeleton className="h-7 w-7 rounded-lg" />
-                            <Skeleton className="h-7 w-7 rounded-lg" />
-                          </div>
-                        </td>
+              <>
+                {/* Desktop Skeleton Table */}
+                <div className="hidden md:block overflow-x-auto animate-fade-in">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20">
+                        <th className="px-6 py-4"><Skeleton className="h-4 w-24" /></th>
+                        <th className="px-6 py-4"><Skeleton className="h-4 w-32" /></th>
+                        <th className="px-6 py-4"><Skeleton className="h-4 w-16" /></th>
+                        <th className="px-6 py-4"><Skeleton className="h-4 w-20" /></th>
+                        <th className="px-6 py-4 flex justify-end"><Skeleton className="h-4 w-16" /></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {[1, 2, 3, 4].map((i) => (
+                        <tr key={i}>
+                          <td className="px-6 py-4.5">
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <Skeleton className="h-4 w-32" />
+                            </div>
+                          </td>
+                          <td className="px-6 py-4.5"><Skeleton className="h-4 w-48" /></td>
+                          <td className="px-6 py-4.5"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                          <td className="px-6 py-4.5"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-6 py-4.5">
+                            <div className="flex items-center justify-end gap-2.5">
+                              <Skeleton className="h-7 w-7 rounded-lg" />
+                              <Skeleton className="h-7 w-7 rounded-lg" />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Mobile Skeleton Cards */}
+                <div className="block md:hidden p-4 space-y-4 animate-fade-in">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-3 pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <div>
+                            <Skeleton className="h-3 w-24 mb-1" />
+                            <Skeleton className="h-2.5 w-36" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-14 rounded-full" />
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <Skeleton className="h-3.5 w-24" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-7 w-7 rounded-lg" />
+                          <Skeleton className="h-7 w-7 rounded-lg" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
                 <UserX className="h-10 w-10 opacity-40" />
                 <p className="text-sm">No users found.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      <th className="px-6 py-4">User</th>
-                      <th className="px-6 py-4">Email</th>
-                      <th className="px-6 py-4">Role</th>
-                      <th className="px-6 py-4">Joined</th>
-                      <th className="px-6 py-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-sm">
-                    {filtered.map((user) => (
-                      <tr key={user.id} className="hover:bg-white/2 transition-colors">
-                        <td className="px-6 py-4.5">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
-                              {user.name.substring(0, 2).toUpperCase()}
+              <>
+                {/* Desktop Users Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <th className="px-6 py-4">User</th>
+                        <th className="px-6 py-4">Email</th>
+                        <th className="px-6 py-4">Role</th>
+                        <th className="px-6 py-4">Joined</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-sm">
+                      {filtered.map((user) => (
+                        <tr key={user.id} className="hover:bg-white/2 transition-colors">
+                          <td className="px-6 py-4.5">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                                {user.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <span className="font-semibold text-slate-200">{user.name}</span>
                             </div>
-                            <span className="font-semibold text-slate-200">{user.name}</span>
+                          </td>
+                          <td className="px-6 py-4.5 text-slate-400">{user.email}</td>
+                          <td className="px-6 py-4.5">
+                            {user.role === 'ADMIN' ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                                <Crown className="h-3 w-3" />
+                                Admin
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-500/15 text-slate-400 border border-slate-500/20">
+                                <UserCheck className="h-3 w-3" />
+                                User
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4.5 text-slate-300">
+                            {new Date(user.createdAt).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td className="px-6 py-4.5 text-right">
+                            <div className="flex items-center justify-end gap-2.5">
+                              <button
+                                onClick={() => openEditModal(user)}
+                                className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                                title="Edit User"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              
+                              <button
+                                onClick={() => openDeleteModal(user)}
+                                disabled={user.id === currentAdminId}
+                                className="p-1.5 rounded-lg border border-white/5 hover:bg-red-500/10 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:text-red-400 transition-colors cursor-pointer"
+                                title={user.id === currentAdminId ? "You cannot delete your own account" : "Delete User"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Users Cards List */}
+                <div className="block md:hidden divide-y divide-white/5">
+                  {filtered.map((user) => (
+                    <div key={user.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                            {user.name.substring(0, 2).toUpperCase()}
                           </div>
-                        </td>
-                        <td className="px-6 py-4.5 text-slate-400">{user.email}</td>
-                        <td className="px-6 py-4.5">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-200 text-sm truncate max-w-[150px]">{user.name}</span>
+                            <span className="text-xs text-slate-500 truncate max-w-[180px]">{user.email}</span>
+                          </div>
+                        </div>
+                        <div>
                           {user.role === 'ADMIN' ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
-                              <Crown className="h-3 w-3" />
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                              <Crown className="h-2.5 w-2.5" />
                               Admin
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-500/15 text-slate-400 border border-slate-500/20">
-                              <UserCheck className="h-3 w-3" />
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-slate-500/15 text-slate-400 border border-slate-500/20">
+                              <UserCheck className="h-2.5 w-2.5" />
                               User
                             </span>
                           )}
-                        </td>
-                        <td className="px-6 py-4.5 text-slate-300">
-                          {new Date(user.createdAt).toLocaleDateString('en-US', {
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
+                        <span>
+                          Joined {new Date(user.createdAt).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
                           })}
-                        </td>
-                        <td className="px-6 py-4.5 text-right">
-                          <div className="flex items-center justify-end gap-2.5">
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-                              title="Edit User"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            
-                            <button
-                              onClick={() => openDeleteModal(user)}
-                              disabled={user.id === currentAdminId}
-                              className="p-1.5 rounded-lg border border-white/5 hover:bg-red-500/10 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:text-red-400 transition-colors cursor-pointer"
-                              title={user.id === currentAdminId ? "You cannot delete your own account" : "Delete User"}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 transition-colors"
+                            title="Edit User"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                          
+                          <button
+                            onClick={() => openDeleteModal(user)}
+                            disabled={user.id === currentAdminId}
+                            className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-red-400 transition-colors"
+                            title={user.id === currentAdminId ? "You cannot delete your own account" : "Delete User"}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </>
-      ) : (
+      ) : activeTab === 'categories' ? (
         <>
           {/* Stats Cards (Category Presets) */}
           {loadingPresets ? (
@@ -776,6 +1017,408 @@ export default function AdminPage() {
               }
             </div>
           )}
+        </>
+      ) : (
+        <>
+          {/* Global Aggregated Statistics */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Globe className="h-4 w-4 text-emerald-400" />
+                Global Aggregated Statistics
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">Convert to:</span>
+                <select
+                  value={txCurrency}
+                  onChange={(e) => setTxCurrency(e.target.value)}
+                  className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-slate-200 outline-none focus:border-emerald-500/50 cursor-pointer"
+                >
+                  {currencies.map((curr) => (
+                    <option key={curr.code} value={curr.code} className="bg-sidebar-bg">
+                      {curr.code} ({curr.symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+                  <Activity className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Total Financial Volume</p>
+                  <p className="text-2xl font-bold text-slate-100">
+                    {formatCurrency(txStats.totalVolume, txCurrency)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 animate-pulse">
+                  <ArrowUpRight className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Global Income</p>
+                  <p className="text-2xl font-bold text-emerald-400">
+                    {formatCurrency(txStats.totalIncome, txCurrency)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15 animate-pulse">
+                  <ArrowDownLeft className="h-5 w-5 text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Global Expenses</p>
+                  <p className="text-2xl font-bold text-rose-400">
+                    {formatCurrency(txStats.totalExpense, txCurrency)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Audit Trail Filters */}
+          <div className="glass-panel rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                <Filter className="h-4 w-4 text-emerald-400" />
+                Audit Trail Filters
+              </div>
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/5 border border-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset Filters
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search description, user, category..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-3 pr-9 py-2 glass-input text-xs"
+                />
+              </div>
+
+              {/* Type Filter */}
+              <select
+                value={txTypeFilter}
+                onChange={(e) => handleTypeFilterChange(e.target.value as any)}
+                className="w-full glass-input text-xs cursor-pointer"
+              >
+                <option value="" className="bg-sidebar-bg text-slate-200">All Types</option>
+                <option value="INCOME" className="bg-sidebar-bg text-slate-200">Income Only</option>
+                <option value="EXPENSE" className="bg-sidebar-bg text-slate-200">Expense Only</option>
+              </select>
+
+              {/* Category Filter */}
+              <select
+                value={txCatFilter}
+                onChange={(e) => handleCatFilterChange(e.target.value)}
+                className="w-full glass-input text-xs cursor-pointer"
+              >
+                <option value="" className="bg-sidebar-bg text-slate-200">All Categories</option>
+                {presets.map((preset) => (
+                  <option key={preset.id} value={preset.id} className="bg-sidebar-bg text-slate-200">
+                    {preset.name} ({preset.type})
+                  </option>
+                ))}
+              </select>
+
+              {/* Date Range */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="date"
+                    placeholder="Start Date"
+                    value={txStartDate}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    className="w-full px-2 py-2 glass-input text-xs [color-scheme:dark]"
+                  />
+                </div>
+                <span className="text-slate-500 text-xs">-</span>
+                <div className="relative flex-1">
+                  <input
+                    type="date"
+                    placeholder="End Date"
+                    value={txEndDate}
+                    onChange={(e) => handleEndDateChange(e.target.value)}
+                    className="w-full px-2 py-2 glass-input text-xs [color-scheme:dark]"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Ledger Table */}
+          <div className="glass-panel rounded-2xl overflow-hidden">
+            {loadingTx ? (
+              <>
+                {/* Desktop Skeleton Table */}
+                <div className="hidden md:block overflow-x-auto animate-fade-in">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <th className="px-6 py-4 text-left">User</th>
+                        <th className="px-6 py-4 text-left">Transaction</th>
+                        <th className="px-6 py-4 text-left">Type</th>
+                        <th className="px-6 py-4 text-left">Date</th>
+                        <th className="px-6 py-4 text-left">Amount</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <tr key={i}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <div>
+                                <Skeleton className="h-3 w-24 mb-1" />
+                                <Skeleton className="h-2 w-32" />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <Skeleton className="h-3.5 w-36 mb-1.5" />
+                            <Skeleton className="h-2.5 w-20" />
+                          </td>
+                          <td className="px-6 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                          <td className="px-6 py-4"><Skeleton className="h-3.5 w-24" /></td>
+                          <td className="px-6 py-4"><Skeleton className="h-3.5 w-20" /></td>
+                          <td className="px-6 py-4 text-right"><Skeleton className="h-7 w-7 rounded-lg inline-block" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Mobile Skeleton Cards */}
+                <div className="block md:hidden p-4 space-y-4 animate-fade-in">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-3 pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <div>
+                            <Skeleton className="h-3 w-20 mb-1" />
+                            <Skeleton className="h-2.5 w-32" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="space-y-1">
+                          <Skeleton className="h-3 w-28" />
+                          <Skeleton className="h-2.5 w-16" />
+                        </div>
+                        <Skeleton className="h-7 w-7 rounded-lg" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : transactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
+                <Clock className="h-10 w-10 opacity-40 animate-pulse" />
+                <p className="text-sm">No transaction ledger records found.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Transactions Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/8 bg-slate-950/20 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <th className="px-6 py-4 text-left">User</th>
+                        <th className="px-6 py-4 text-left">Transaction</th>
+                        <th className="px-6 py-4 text-left">Type</th>
+                        <th className="px-6 py-4 text-left">Date</th>
+                        <th className="px-6 py-4 text-left">Amount</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-sm">
+                      {transactions.map((tx) => (
+                        <tr key={tx.id} className="hover:bg-white/2 transition-colors">
+                          {/* User Info */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                                {tx.user?.name ? tx.user.name.substring(0, 2).toUpperCase() : 'US'}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-slate-200 truncate max-w-[150px]">{tx.user?.name || 'Unknown User'}</span>
+                                <span className="text-xs text-slate-500 truncate max-w-[150px]">{tx.user?.email || 'No Email'}</span>
+                              </div>
+                            </div>
+                          </td>
+                          {/* Transaction Info */}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-slate-200 max-w-[220px] truncate">{tx.description || 'No description'}</span>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <div 
+                                  className="h-2 w-2 rounded-full" 
+                                  style={{ backgroundColor: tx.category?.color || '#94a3b8' }}
+                                />
+                                <span className="text-xs text-slate-400">{tx.category?.name || 'Uncategorized'}</span>
+                              </div>
+                            </div>
+                          </td>
+                          {/* Type */}
+                          <td className="px-6 py-4">
+                            {tx.type === 'INCOME' ? (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                <ArrowUpRight className="h-3 w-3" />
+                                Income
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/20">
+                                <ArrowDownLeft className="h-3 w-3" />
+                                Expense
+                              </span>
+                            )}
+                          </td>
+                          {/* Date */}
+                          <td className="px-6 py-4 text-slate-300">
+                            {new Date(tx.date).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          {/* Amount */}
+                          <td className="px-6 py-4 font-bold">
+                            <span className={tx.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}>
+                              {tx.type === 'INCOME' ? '+' : '-'} {formatCurrency(tx.amount, tx.currency)}
+                            </span>
+                          </td>
+                          {/* Action */}
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedTx(tx);
+                                setIsTxModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Transactions Cards List */}
+                <div className="block md:hidden divide-y divide-white/5">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                            {tx.user?.name ? tx.user.name.substring(0, 2).toUpperCase() : 'US'}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-200 text-sm truncate max-w-[150px]">{tx.user?.name || 'Unknown User'}</span>
+                            <span className="text-xs text-slate-500 truncate max-w-[150px]">{tx.user?.email || 'No Email'}</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-sm font-bold block ${tx.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {tx.type === 'INCOME' ? '+' : '-'} {formatCurrency(tx.amount, tx.currency)}
+                          </span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">
+                            {new Date(tx.date).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                        <div className="flex flex-col min-w-0 pr-2">
+                          <span className="text-slate-300 font-medium truncate max-w-[200px]">{tx.description || 'No description'}</span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <div 
+                              className="h-1.5 w-1.5 rounded-full" 
+                              style={{ backgroundColor: tx.category?.color || '#94a3b8' }}
+                            />
+                            <span className="text-[10px] text-slate-500">{tx.category?.name || 'Uncategorized'}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {tx.type === 'INCOME' ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                              Income
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/20">
+                              Expense
+                            </span>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedTx(tx);
+                              setIsTxModalOpen(true);
+                            }}
+                            className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Pagination Controls */}
+            {!loadingTx && txTotalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-950/10 text-xs text-slate-400">
+                <div>
+                  Showing <span className="font-semibold text-slate-200">{Math.min(txTotal, (txPage - 1) * txLimit + 1)}</span> to{' '}
+                  <span className="font-semibold text-slate-200">{Math.min(txTotal, txPage * txLimit)}</span> of{' '}
+                  <span className="font-semibold text-slate-200">{txTotal}</span> transactions
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTxPage(prev => Math.max(1, prev - 1))}
+                    disabled={txPage === 1}
+                    className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="font-medium text-slate-300">
+                    Page {txPage} of {txTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setTxPage(prev => Math.min(txTotalPages, prev + 1))}
+                    disabled={txPage === txTotalPages}
+                    className="p-1.5 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -1001,6 +1644,164 @@ export default function AdminPage() {
           }}
         />
       </Modal>
+
+      {/* READ-ONLY TRANSACTION DETAIL MODAL (AUDIT TRAIL) */}
+      {isTxModalOpen && selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-sidebar-bg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/8">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-emerald-400" />
+                <h3 className="text-lg font-bold text-slate-100">Audit Ledger Details</h3>
+              </div>
+              <button 
+                onClick={() => { setIsTxModalOpen(false); setSelectedTx(null); }} 
+                className="p-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 pt-5">
+              {/* Transaction ID and Compliance Notice */}
+              <div className="p-3.5 rounded-xl bg-white/2 border border-white/5 space-y-2 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Transaction ID</span>
+                  <span className="text-[10px] font-mono text-slate-400 select-all">{selectedTx.id}</span>
+                </div>
+                <div className="flex items-start gap-2 text-[11px] text-amber-500 bg-amber-500/5 border border-amber-500/10 p-2.5 rounded-lg text-left">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                  <span>
+                    This is a read-only financial audit trail record. Transaction details cannot be edited or deleted by administrators to ensure platform-wide compliance and data integrity.
+                  </span>
+                </div>
+              </div>
+
+              {/* Core financial data */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-white/2 border border-white/5 text-center">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Audit Type</span>
+                  {selectedTx.type === 'INCOME' ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                      <ArrowUpRight className="h-4 w-4" />
+                      Income
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/20">
+                      <ArrowDownLeft className="h-4 w-4" />
+                      Expense
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/2 border border-white/5 text-center">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Audited Amount</span>
+                  <span className={`text-lg font-bold block ${selectedTx.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {selectedTx.type === 'INCOME' ? '+' : '-'} {formatCurrency(selectedTx.amount, selectedTx.currency)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Detailed Metadata Grid */}
+              <div className="glass-panel rounded-xl p-4 space-y-4.5 text-sm text-left">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-1.5 flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-emerald-400" />
+                  Transaction Metadata
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Description</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTx.description || 'No description provided'}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Category</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div 
+                        className="h-6 w-6 rounded-lg flex items-center justify-center text-xs border"
+                        style={{
+                          backgroundColor: `${selectedTx.category?.color || '#94a3b8'}15`,
+                          color: selectedTx.category?.color || '#94a3b8',
+                          borderColor: `${selectedTx.category?.color || '#94a3b8'}30`,
+                        }}
+                      >
+                        {(() => {
+                          const IconComponent = (Icons as any)[selectedTx.category?.icon] || Icons.HelpCircle;
+                          return <IconComponent className="h-3.5 w-3.5" />;
+                        })()}
+                      </div>
+                      <span className="font-medium text-slate-200">{selectedTx.category?.name || 'Uncategorized'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Transaction Date</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">
+                      {new Date(selectedTx.date).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Original Currency</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTx.currency}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Account Details */}
+              <div className="glass-panel rounded-xl p-4 space-y-3.5 text-sm text-left">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-1.5 flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 text-emerald-400" />
+                  Associated Account
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Account Owner</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTx.user?.name || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">Email Address</span>
+                    <span className="font-medium text-slate-200 block mt-0.5">{selectedTx.user?.email || 'N/A'}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-xs text-slate-500 block">User Account ID</span>
+                    <span className="font-mono text-xs text-slate-400 block mt-0.5 select-all">{selectedTx.user?.id || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* System Logs */}
+              <div className="grid grid-cols-2 gap-4 text-xs text-slate-500 bg-white/1 p-3 rounded-xl border border-white/5 text-left">
+                <div>
+                  <span>Recorded In System:</span>
+                  <span className="block font-medium text-slate-400 mt-0.5">
+                    {new Date(selectedTx.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div>
+                  <span>Last System Update:</span>
+                  <span className="block font-medium text-slate-400 mt-0.5">
+                    {new Date(selectedTx.updatedAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-4 border-t border-white/8">
+                <button
+                  type="button"
+                  onClick={() => { setIsTxModalOpen(false); setSelectedTx(null); }}
+                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold text-white transition-colors cursor-pointer text-center"
+                >
+                  Close Audit Log
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

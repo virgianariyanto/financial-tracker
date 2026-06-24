@@ -261,6 +261,15 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Hide scrollbar utility for clean mobile swipe interfaces */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 /* Sidebar blur when modal is open and smooth mobile transition */
 aside {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease !important;
