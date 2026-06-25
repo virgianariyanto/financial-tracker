@@ -31,6 +31,7 @@ import {
   MessageSquare,
   LifeBuoy,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,6 +40,17 @@ import Modal from '@/components/ui/modal';
 import CategoryForm from '@/components/forms/category-form';
 import { currencies, formatCurrency } from '@/lib/currencies';
 import { useToast } from '@/components/toast-context';
+import { 
+  ResponsiveContainer, 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  Tooltip as ChartTooltip, 
+  BarChart, 
+  Bar, 
+  CartesianGrid 
+} from 'recharts';
 
 interface UserRecord {
   id: string;
@@ -102,10 +114,126 @@ interface SupportTicketRecord {
 export default function AdminPage() {
   const showConfirm = useConfirm();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'users' | 'categories' | 'transactions' | 'support'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'categories' | 'transactions' | 'support' | 'health'>('users');
   
   // Users state
   const [users, setUsers] = useState<UserRecord[]>([]);
+
+  // System Health state
+  const [healthStats, setHealthStats] = useState<any>(null);
+  const [loadingHealth, setLoadingHealth] = useState(true);
+
+  // Maintenance loading state
+  const [maintenanceLoading, setMaintenanceLoading] = useState({
+    optimize: false,
+    clearCache: false,
+    backup: false,
+  });
+
+  const handleOptimizeDb = async () => {
+    setMaintenanceLoading(prev => ({ ...prev, optimize: true }));
+    try {
+      const res = await fetch('/api/admin/system/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'optimize' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotification('success', data.message || 'Database optimized successfully.');
+        fetchHealthStats();
+      } else {
+        showNotification('error', data.error || 'Failed to optimize database.');
+      }
+    } catch (error) {
+      showNotification('error', 'A system error occurred.');
+    } finally {
+      setMaintenanceLoading(prev => ({ ...prev, optimize: false }));
+    }
+  };
+
+  const handleClearCache = async () => {
+    setMaintenanceLoading(prev => ({ ...prev, clearCache: true }));
+    try {
+      const res = await fetch('/api/admin/system/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_cache' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotification('success', data.message || 'Cache cleared successfully.');
+      } else {
+        showNotification('error', data.error || 'Failed to clear cache.');
+      }
+    } catch (error) {
+      showNotification('error', 'A system error occurred.');
+    } finally {
+      setMaintenanceLoading(prev => ({ ...prev, clearCache: false }));
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    setMaintenanceLoading(prev => ({ ...prev, backup: true }));
+    try {
+      const res = await fetch('/api/admin/system/backup');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().split('T')[0];
+        a.download = `finora_backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        showNotification('success', 'Database backup downloaded successfully.');
+      } else {
+        const data = await res.json();
+        showNotification('error', data.error || 'Failed to generate backup.');
+      }
+    } catch (error) {
+      showNotification('error', 'A connection error occurred.');
+    } finally {
+      setMaintenanceLoading(prev => ({ ...prev, backup: false }));
+    }
+  };
+
+  // Health helpers
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatUptime = (seconds: number) => {
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const parts = [];
+    if (d > 0) parts.push(`${d}d`);
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    return parts.join(' ') || '0m';
+  };
+
+  async function fetchHealthStats() {
+    setLoadingHealth(true);
+    try {
+      const res = await fetch('/api/admin/system/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setHealthStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching system health stats:', error);
+    } finally {
+      setLoadingHealth(false);
+    }
+  }
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
@@ -311,6 +439,8 @@ export default function AdminPage() {
       fetchTransactions();
     } else if (activeTab === 'support') {
       fetchAdminTickets();
+    } else if (activeTab === 'health') {
+      fetchHealthStats();
     }
   }, [activeTab, txPage, txSearch, txTypeFilter, txCatFilter, txStartDate, txEndDate, txCurrency, ticketPage, ticketSearch, ticketStatusFilter, ticketCatFilter]);
 
@@ -757,6 +887,17 @@ export default function AdminPage() {
         >
           <HelpCircle className="h-4 w-4" />
           Support Tickets
+        </button>
+        <button
+          onClick={() => setActiveTab('health')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+            activeTab === 'health'
+              ? 'border-emerald-500 text-emerald-400 font-bold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Activity className="h-4 w-4" />
+          System Health
         </button>
       </div>
 
@@ -1543,7 +1684,7 @@ export default function AdminPage() {
             )}
           </div>
         </>
-      ) : (
+      ) : activeTab === 'support' ? (
         <>
           {/* Support Tickets Panel */}
           
@@ -1883,6 +2024,384 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+        </>
+      ) : (
+        <>
+          {/* System Health Panel */}
+          {loadingHealth || !healthStats ? (
+            <div className="space-y-6 animate-pulse">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="glass-panel rounded-2xl p-5 flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-white/5 animate-pulse" />
+                    <div className="space-y-2 flex-1 animate-pulse">
+                      <div className="h-3 w-16 bg-white/5 rounded" />
+                      <div className="h-6 w-24 bg-white/5 rounded" />
+                      <div className="h-2 w-full bg-white/5 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="glass-panel rounded-2xl p-6 h-[380px] bg-white/1">
+                  <div className="h-4 w-40 bg-white/5 rounded mb-6" />
+                  <div className="h-[280px] w-full bg-white/5 rounded" />
+                </div>
+                <div className="glass-panel rounded-2xl p-6 h-[380px] bg-white/1">
+                  <div className="h-4 w-40 bg-white/5 rounded mb-6" />
+                  <div className="h-[280px] w-full bg-white/5 rounded" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="glass-panel rounded-2xl p-6 space-y-4">
+                  <div className="h-4 w-36 bg-white/5 rounded" />
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="p-3 bg-white/5 rounded-xl h-16" />
+                    ))}
+                  </div>
+                </div>
+                <div className="glass-panel rounded-2xl p-6 space-y-4">
+                  <div className="h-4 w-36 bg-white/5 rounded" />
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-6 w-full bg-white/5 rounded" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Telemetry Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* DB Size */}
+                <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/20 shrink-0">
+                    <Globe className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-400 font-medium truncate">Database Size</p>
+                    <p className="text-xl font-bold text-slate-100 mt-1 truncate">
+                      {formatBytes(healthStats.db.sizeBytes)}
+                    </p>
+                    <span className="text-[10px] text-slate-500 block truncate mt-0.5" title={healthStats.db.version}>
+                      {healthStats.db.version.split(' on ')[0]}
+                    </span>
+                  </div>
+                </div>
+
+                {/* DB Connections */}
+                <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/20 shrink-0">
+                    <Activity className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-400 font-medium truncate">DB Connections</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <p className="text-xl font-bold text-slate-100 truncate">
+                        {healthStats.db.activeConnections}
+                      </p>
+                      <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                        healthStats.db.activeConnections < 15
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                          : healthStats.db.activeConnections < 40
+                            ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
+                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                      }`}>
+                        {healthStats.db.activeConnections < 40 ? 'Healthy' : 'High Load'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 block truncate mt-0.5">Active PostgreSQL Sessions</span>
+                  </div>
+                </div>
+
+                {/* System Memory */}
+                <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/20 shrink-0">
+                    <Shield className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-400 font-medium truncate">System Memory</p>
+                    <p className="text-xl font-bold text-slate-100 mt-1 truncate">
+                      {healthStats.system.memory.usagePercent.toFixed(1)}%
+                    </p>
+                    <div className="h-1 w-full bg-slate-950 border border-white/5 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          healthStats.system.memory.usagePercent > 85 ? 'bg-red-500' : 'bg-amber-500'
+                        }`} 
+                        style={{ width: `${healthStats.system.memory.usagePercent}%` }} 
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-500 block truncate mt-1">
+                      {formatBytes(healthStats.system.memory.total - healthStats.system.memory.free)} / {formatBytes(healthStats.system.memory.total)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Host Platform */}
+                <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/20 shrink-0">
+                    <Crown className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-400 font-medium truncate">Host System</p>
+                    <p className="text-xl font-bold text-slate-100 mt-1 truncate">
+                      {healthStats.system.platform}
+                    </p>
+                    <span className="text-[10px] text-slate-400 font-medium block truncate mt-0.5">
+                      {healthStats.system.cpu.cores} Cores CPU ({healthStats.system.arch})
+                    </span>
+                    <span className="text-[10px] text-slate-500 block truncate mt-0.5">
+                      System Uptime: {formatUptime(healthStats.system.uptime)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Visualizations */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Volumetric Cash Flow Trend */}
+                <div className="glass-panel rounded-2xl p-6 flex flex-col">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Activity className="h-5 w-5 text-emerald-400" />
+                    <h2 className="text-base font-semibold text-slate-100">Daily Transaction Volume Flow (30 Days)</h2>
+                  </div>
+                  <div className="flex-1 min-h-[280px]">
+                    {healthStats.charts.transactions.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <AreaChart data={healthStats.charts.transactions}>
+                          <defs>
+                            <linearGradient id="colorHealthIncome" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="colorHealthExpense" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
+                              <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                          <XAxis dataKey="date" stroke="#64748b" fontSize={10} />
+                          <YAxis stroke="#64748b" fontSize={10} />
+                          <ChartTooltip
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.08)', borderRadius: '12px' }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                          />
+                          <Area type="monotone" dataKey="income" stroke="#10b981" fillOpacity={1} fill="url(#colorHealthIncome)" strokeWidth={2} name="Income Volume" />
+                          <Area type="monotone" dataKey="expense" stroke="#f43f5e" fillOpacity={1} fill="url(#colorHealthExpense)" strokeWidth={2} name="Expense Volume" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-500 text-xs py-20">
+                        No transaction data recorded in the last 30 days.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* User Registrations Trend */}
+                <div className="glass-panel rounded-2xl p-6 flex flex-col">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Users className="h-5 w-5 text-blue-400" />
+                    <h2 className="text-base font-semibold text-slate-100">User Registrations (30 Days)</h2>
+                  </div>
+                  <div className="flex-1 min-h-[280px]">
+                    {healthStats.charts.users.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={healthStats.charts.users}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                          <XAxis dataKey="date" stroke="#64748b" fontSize={10} />
+                          <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
+                          <ChartTooltip
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.08)', borderRadius: '12px' }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                          />
+                          <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="New Users" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-500 text-xs py-20">
+                        No user registrations recorded in the last 30 days.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Telemetry Subgrid (Row counts & Process details) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* DB Table row counts */}
+                <div className="glass-panel rounded-2xl p-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-200 border-b border-white/5 pb-2.5 flex items-center gap-2">
+                    <FolderTree className="h-4.5 w-4.5 text-emerald-400" />
+                    Database Record Aggregations
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Users</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.users}</p>
+                    </div>
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Transactions</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.transactions}</p>
+                    </div>
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Budget Limits</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.budgets}</p>
+                    </div>
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Categories</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.categories}</p>
+                    </div>
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Savings Goals</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.savingsGoals}</p>
+                    </div>
+                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-center">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Support Tickets</span>
+                      <p className="text-base font-bold text-slate-200 mt-1">{healthStats.db.counts.supportTickets}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Node.js Process details */}
+                <div className="glass-panel rounded-2xl p-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-200 border-b border-white/5 pb-2.5 flex items-center gap-2">
+                    <Shield className="h-4.5 w-4.5 text-blue-400" />
+                    Node.js Runtime & Engine Telemetry
+                  </h3>
+                  <div className="space-y-3.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Process Uptime:</span>
+                      <span className="font-semibold text-slate-200 font-mono">
+                        {formatUptime(healthStats.system.process.uptime)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">RSS Allocated:</span>
+                      <span className="font-semibold text-slate-200 font-mono">
+                        {formatBytes(healthStats.system.process.memory.rss)}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Heap Memory (Used / Total):</span>
+                        <span className="font-semibold text-slate-200 font-mono">
+                          {formatBytes(healthStats.system.process.memory.heapUsed)} / {formatBytes(healthStats.system.process.memory.heapTotal)}
+                        </span>
+                      </div>
+                      {(() => {
+                        const heapPct = (healthStats.system.process.memory.heapUsed / healthStats.system.process.memory.heapTotal) * 100;
+                        return (
+                          <div className="h-1.5 w-full bg-slate-950 border border-white/5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                heapPct > 80 ? 'bg-red-500' : heapPct > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                              }`} 
+                              style={{ width: `${heapPct}%` }} 
+                            />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center justify-between pt-1 text-[10px] text-slate-500 border-t border-white/5">
+                      <span>OS Kernel:</span>
+                      <span className="font-mono">{healthStats.system.release}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Maintenance & Administration Panel */}
+              <div className="glass-panel rounded-2xl p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-200 border-b border-white/5 pb-2.5 flex items-center gap-2">
+                  <Shield className="h-4.5 w-4.5 text-amber-400" />
+                  System Maintenance & Administration
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Perform critical system tasks and database maintenance. Please execute these tasks with caution as they impact platform performance and data availability.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  {/* Optimize Database */}
+                  <div className="p-4 bg-white/2 border border-white/5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-300 uppercase">Optimize Database</h4>
+                      <p className="text-[10px] text-slate-500 mt-1">Rebuild table indexes and update query planner statistics to optimize performance.</p>
+                    </div>
+                    <button
+                      onClick={handleOptimizeDb}
+                      disabled={maintenanceLoading.optimize}
+                      className="w-full py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {maintenanceLoading.optimize ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Optimizing...
+                        </>
+                      ) : (
+                        <>
+                          <Activity className="h-3.5 w-3.5" />
+                          Optimize Now
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Clear Cache */}
+                  <div className="p-4 bg-white/2 border border-white/5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-300 uppercase">Clear System Cache</h4>
+                      <p className="text-[10px] text-slate-500 mt-1">Flush global in-memory caches, forcing the application to retrieve fresh currency and configuration data.</p>
+                    </div>
+                    <button
+                      onClick={handleClearCache}
+                      disabled={maintenanceLoading.clearCache}
+                      className="w-full py-2 px-3 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {maintenanceLoading.clearCache ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Clearing...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          Clear Cache
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Download Backup */}
+                  <div className="p-4 bg-white/2 border border-white/5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-300 uppercase">Database Backup</h4>
+                      <p className="text-[10px] text-slate-500 mt-1">Export all system tables as a single JSON data dump file for external backups and compliance auditing.</p>
+                    </div>
+                    <button
+                      onClick={handleDownloadBackup}
+                      disabled={maintenanceLoading.backup}
+                      className="w-full py-2 px-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {maintenanceLoading.backup ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Backing up...
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-3.5 w-3.5" />
+                          Download Backup
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
