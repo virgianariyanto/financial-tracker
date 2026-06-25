@@ -17,7 +17,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <div className="max-w-md w-full glass-panel p-8 rounded-3xl text-center space-y-6 relative overflow-hidden">
         {/* Decorative background blur */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/20 rounded-full blur-[80px] pointer-events-none" />

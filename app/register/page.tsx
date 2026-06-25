@@ -128,7 +128,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Panel — Register Form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 relative">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center py-12 px-6 sm:p-10 relative overflow-x-hidden">
         {/* Subtle radial glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-teal-500/[0.03] rounded-full blur-[100px]" />
 
