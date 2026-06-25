@@ -49,12 +49,12 @@ interface Transaction {
 }
 
 const QUICK_DATE_FILTERS = [
-  { id: 'all', label: 'Semua Waktu' },
-  { id: 'today', label: 'Hari Ini' },
-  { id: 'this-week', label: 'Minggu Ini' },
-  { id: 'this-month', label: 'Bulan Ini' },
-  { id: 'last-month', label: 'Bulan Lalu' },
-  { id: 'this-year', label: 'Tahun Ini' },
+  { id: 'all', label: 'All' },
+  { id: 'today', label: 'Today' },
+  { id: 'this-week', label: 'This Week' },
+  { id: 'this-month', label: 'This Month' },
+  { id: 'last-month', label: 'Last Month' },
+  { id: 'this-year', label: 'This Year' },
 ];
 
 export default function TransactionsClient() {
