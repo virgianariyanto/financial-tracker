@@ -1,0 +1,27 @@
+import { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Finora — Premium Financial Tracker",
+    short_name: "Finora",
+    description: "Track your personal and family expenses, savings goals, and budgets seamlessly.",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#111318",
+    theme_color: "#10b981",
+    icons: [
+      {
+        src: "/icon.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icon.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ],
+  };
+}

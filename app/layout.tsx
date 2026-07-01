@@ -13,8 +13,63 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finora — Premium Financial Tracker",
-  description: "Track your personal and family expenses, savings goals, and budgets seamlessly.",
+  metadataBase: new URL("https://finora.web.id"),
+  title: {
+    default: "Finora — Premium Financial Tracker",
+    template: "%s | Finora",
+  },
+  description: "Track your personal and family expenses, savings goals, and budgets seamlessly with premium charts and financial insights.",
+  keywords: [
+    "financial tracker",
+    "budget planner",
+    "expense tracker",
+    "personal finance",
+    "family budget",
+    "savings tracker",
+    "finora",
+    "finance management",
+    "money manager",
+  ],
+  authors: [{ name: "Finora Team", url: "https://finora.web.id" }],
+  creator: "Finora Team",
+  publisher: "Finora",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://finora.web.id",
+    title: "Finora — Premium Financial Tracker",
+    description: "Track your personal and family expenses, savings goals, and budgets seamlessly with premium charts and financial insights.",
+    siteName: "Finora",
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: "Finora Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Finora — Premium Financial Tracker",
+    description: "Track your personal and family expenses, savings goals, and budgets seamlessly with premium charts and financial insights.",
+    images: ["/icon.png"],
+    creator: "@finora",
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 import { CurrencyProvider } from "@/components/currency-context";

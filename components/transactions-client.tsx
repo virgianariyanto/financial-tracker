@@ -430,7 +430,7 @@ export default function TransactionsClient() {
         {/* Header Row */}
         <div className="flex justify-between items-start border-b border-slate-200 pb-5">
           <div>
-            <h1 className="text-3xl font-extrabold text-[#0f172a] tracking-tight">Finora Financial Report</h1>
+            <div className="text-3xl font-extrabold text-[#0f172a] tracking-tight" role="heading" aria-level={1}>Finora Financial Report</div>
             <p className="text-sm text-slate-500 font-medium mt-1">Transaction History Statement</p>
           </div>
           <img src="/image/FINORA.png" alt="Finora Logo" className="h-10 object-contain" />
